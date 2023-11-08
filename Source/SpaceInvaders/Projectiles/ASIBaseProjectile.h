@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "ASIBaseProjectile.generated.h"
 
+// TODO: TYPO double A
 UCLASS()
 class SPACEINVADERS_API AASIBaseProjectile : public AActor
 {
