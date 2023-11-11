@@ -16,6 +16,8 @@ AASIPlayerBoundActor::AASIPlayerBoundActor()
 	StaticMeshComp->SetMobility(EComponentMobility::Static);
 	StaticMeshComp->SetupAttachment(RootComponent);
 
+	StaticMeshComp->SetGenerateOverlapEvents(false);
+	StaticMeshComp->SetNotifyRigidBodyCollision(false);
 	StaticMeshComp->CanCharacterStepUpOn = ECB_No;
 	StaticMeshComp->SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);
 
