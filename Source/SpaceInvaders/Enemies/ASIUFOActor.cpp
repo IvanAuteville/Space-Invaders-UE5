@@ -2,26 +2,43 @@
 
 
 #include "ASIUFOActor.h"
+#include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 
-// Sets default values
 AASIUFOActor::AASIUFOActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
+
+	SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
+	SceneComp->SetMobility(EComponentMobility::Movable);
+	SetRootComponent(SceneComp);
+
+	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMeshComp->SetMobility(EComponentMobility::Movable);
+	StaticMeshComp->SetupAttachment(RootComponent);
+
+	StaticMeshComp->SetGenerateOverlapEvents(false);
+	StaticMeshComp->SetNotifyRigidBodyCollision(false);
+	StaticMeshComp->CanCharacterStepUpOn = ECB_No;
+	StaticMeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+
+	// Collision Presets NOTES:
+	// Custom Preset
+	// Collision Enabled (Query Only)
+	// Object Type: WorldDynamic
+	// Ignore everything, Block WoldDynamic (Projectiles)
 
 }
 
-// Called when the game starts or when spawned
-void AASIUFOActor::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
+//void AASIUFOActor::BeginPlay()
+//{
+//	Super::BeginPlay();
+//	
+//}
 
-// Called every frame
-void AASIUFOActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+//void AASIUFOActor::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//}
 

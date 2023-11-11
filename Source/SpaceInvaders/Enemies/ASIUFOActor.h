@@ -6,21 +6,28 @@
 #include "GameFramework/Actor.h"
 #include "ASIUFOActor.generated.h"
 
+class USceneComponent;
+class UStaticMeshComponent;
+
 UCLASS()
 class SPACEINVADERS_API AASIUFOActor : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AASIUFOActor();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+//protected:
+//	virtual void BeginPlay() override;
+//
+//public:	
+//	virtual void Tick(float DeltaTime) override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+private:
+	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TObjectPtr<USceneComponent> SceneComp = nullptr;
+
+	UPROPERTY(Category = "Components", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UStaticMeshComponent> StaticMeshComp = nullptr;
 
 };
