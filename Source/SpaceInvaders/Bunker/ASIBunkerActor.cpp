@@ -5,21 +5,26 @@
 
 AASIBunkerActor::AASIBunkerActor()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	// Init Components
+	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	SetRootComponent(StaticMeshComp);
+	StaticMeshComp->SetGenerateOverlapEvents(false);
+	StaticMeshComp->SetNotifyRigidBodyCollision(false);
+	StaticMeshComp->CanCharacterStepUpOn = ECB_No;
+	StaticMeshComp->SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);
 }
 
-// Called when the game starts or when spawned
-void AASIBunkerActor::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
+//void AASIBunkerActor::BeginPlay()
+//{
+//	Super::BeginPlay();
+//	
+//}
 
-// Called every frame
-void AASIBunkerActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+//void AASIBunkerActor::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//}
 
