@@ -15,17 +15,17 @@
 
 AASIPlayerController::AASIPlayerController()
 {
-	bShowMouseCursor = true;
+	bShowMouseCursor = false;
 
-	bEnableClickEvents = true;
-	bEnableMouseOverEvents = true;
+	bEnableClickEvents = false;
+	bEnableMouseOverEvents = false;
 
 	bEnableTouchEvents = false;
 	bEnableTouchOverEvents = false;
 
-	DefaultMouseCursor = EMouseCursor::Hand;
-	DefaultClickTraceChannel = ECollisionChannel::ECC_Visibility;
-	HitResultTraceDistance = 1000000.f;
+	//DefaultMouseCursor = EMouseCursor::Hand;
+	//DefaultClickTraceChannel = ECollisionChannel::ECC_Visibility;
+	//HitResultTraceDistance = 1000000.f;
 	
 	bGamePaused = false;
 }
@@ -47,7 +47,8 @@ void AASIPlayerController::SetupInputComponent()
 
 void AASIPlayerController::BeginPlay()
 {
-	SetInputModeGameAndUI();
+	SetInputModeGameOnly();
+	// SetInputModeGameAndUI();
 	AddInputMapping();
 }
 
@@ -56,6 +57,15 @@ void AASIPlayerController::SetInputModeGameAndUI()
 	FInputModeGameAndUI InputMode;
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 	InputMode.SetHideCursorDuringCapture(false);
+
+	SetInputMode(InputMode);
+}
+
+void AASIPlayerController::SetInputModeGameOnly()
+{
+	FInputModeGameOnly InputMode;
+	InputMode.SetConsumeCaptureMouseDown(true);
+
 	SetInputMode(InputMode);
 }
 

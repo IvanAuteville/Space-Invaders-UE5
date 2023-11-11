@@ -26,6 +26,7 @@ protected:
 
 private:
 	void SetInputModeGameAndUI();
+	void SetInputModeGameOnly();
 
 	void AddInputMapping();
 
