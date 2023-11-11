@@ -69,7 +69,9 @@ void AASIPlayerController::AddInputMapping()
 	if (InputSubsystem->HasMappingContext(PlayerInputMappingContext))
 		return;
 
-	InputSubsystem->AddMappingContext(PlayerInputMappingContext, 1);
+	// NOTE: Input Priorities should be ideally defined in other place
+	// The first to consume Input should be always the Pawn (1) if exists, then the PlayerController (0)
+	InputSubsystem->AddMappingContext(PlayerInputMappingContext, 0);
 }
 
 void AASIPlayerController::SelectInputTriggered(const FInputActionValue& Value)
