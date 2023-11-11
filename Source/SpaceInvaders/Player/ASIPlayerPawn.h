@@ -6,9 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "ASIPlayerPawn.generated.h"
 
-class UBoxComponent;
-class UStaticMeshComponent;
 class USceneComponent;
+class UStaticMeshComponent;
 
 class UInputComponent;
 class UInputAction;
@@ -35,6 +34,10 @@ protected:
 
 private:
 	void AddInputMapping();
+	void SpawnProjectile();
+
+	UFUNCTION()
+	void OnProjectileHit();
 
 	UFUNCTION()
 	void MoveInputTriggered(const FInputActionValue& Value);
@@ -51,9 +54,8 @@ private:
 
 private:
 	// Components
-	// TODO: maybe this box is not needed if we use the Mesh Collider (more precise)
-	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	TObjectPtr<UBoxComponent> BoxComp = nullptr;
+	//UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	//TObjectPtr<USceneComponent> SceneComp = nullptr;
 
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UStaticMeshComponent> StaticMeshComp = nullptr;
@@ -61,7 +63,7 @@ private:
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> ProjectileSpawnPoint = nullptr;
 
-	UPROPERTY(Category = "Components", EditDefaultsOnly)
+	UPROPERTY(Category = "Components", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<AASIBaseProjectile> ProjectileClass = nullptr;
 
 	// TODO: VFXs
@@ -104,4 +106,7 @@ private:
 	float CachedMovementInputValue = 0.0f;
 
 	AASIPlayerController* PlayerController = nullptr;
+
+	AASIBaseProjectile* Projectile = nullptr;
+	bool bProjectileAvailable = false;
 };

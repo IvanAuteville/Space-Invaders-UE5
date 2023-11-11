@@ -27,26 +27,17 @@ AASIPlayerPawn::AASIPlayerPawn()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Init Components
-	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
-	SetRootComponent(BoxComp);
-	BoxComp->SetGenerateOverlapEvents(true);
-	BoxComp->SetNotifyRigidBodyCollision(true);
-	BoxComp->CanCharacterStepUpOn = ECB_No;
-
+	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	SetRootComponent(StaticMeshComp);
+	StaticMeshComp->SetGenerateOverlapEvents(false);
+	StaticMeshComp->SetNotifyRigidBodyCollision(false);
+	StaticMeshComp->CanCharacterStepUpOn = ECB_No;
+	StaticMeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 	// Collision Presets NOTES:
 	// Custom Preset
 	// Collision Enabled (Query Only)
 	// Object Type: Pawn
 	// Ignore everything, Block WorldStatic
-
-	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
-	StaticMeshComp->SetupAttachment(BoxComp);
-	StaticMeshComp->SetGenerateOverlapEvents(true);
-	StaticMeshComp->SetNotifyRigidBodyCollision(true);
-	StaticMeshComp->CanCharacterStepUpOn = ECB_No;
-	StaticMeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
-
-	// TODO: test OnHit/OnOverlap on the Mesh for more precise collisions with Projectiles
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ProjectileSpawnPoint"));
 	ProjectileSpawnPoint->SetupAttachment(StaticMeshComp);
@@ -69,6 +60,26 @@ void AASIPlayerPawn::BeginPlay()
 	//PlayerController->SetViewTargetWithBlend(this);
 	
 	AddInputMapping();
+
+	SpawnProjectile();
+}
+
+void AASIPlayerPawn::SpawnProjectile()
+{
+	Projectile = GetWorld()->SpawnActor<AASIBaseProjectile>(ProjectileClass,
+		ProjectileSpawnPoint->GetComponentLocation(),
+		ProjectileSpawnPoint->GetComponentRotation());
+
+	Projectile->SetOwner(this);
+
+	Projectile->OnProjectileHit.AddDynamic(this, &ThisClass::OnProjectileHit);
+
+	bProjectileAvailable = true;
+}
+
+void AASIPlayerPawn::OnProjectileHit()
+{
+	bProjectileAvailable = true;
 }
 
 void AASIPlayerPawn::AddInputMapping()
@@ -83,7 +94,9 @@ void AASIPlayerPawn::AddInputMapping()
 	if (InputSubsystem->HasMappingContext(PlayerPawnInputMappingContext))
 		return;
 
-	InputSubsystem->AddMappingContext(PlayerPawnInputMappingContext, 0);
+	// NOTE: Input Priorities should be ideally defined in other place
+	// The first to consume Input should be always the Pawn (1) if exists, then the PlayerController (0)
+	InputSubsystem->AddMappingContext(PlayerPawnInputMappingContext, 1);
 }
 
 void AASIPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -122,7 +135,7 @@ void AASIPlayerPawn::MoveInputTriggered(const FInputActionValue& Value)
 
 	CachedMovementInputValue = Value.Get<float>();
 
-	UE_LOG(LogTemp, Warning, TEXT("Moving"));
+	//UE_LOG(LogTemp, Warning, TEXT("Moving"));
 }
 
 void AASIPlayerPawn::FireInputTriggered(const FInputActionValue& Value)
@@ -130,7 +143,15 @@ void AASIPlayerPawn::FireInputTriggered(const FInputActionValue& Value)
 	if (Value.GetValueType() != EInputActionValueType::Boolean)
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Firing"));
+	if(!bProjectileAvailable)
+		return;
+	
+	Projectile->SetActorLocationAndRotation(ProjectileSpawnPoint->GetComponentLocation(),
+		ProjectileSpawnPoint->GetComponentRotation(), false, nullptr, ETeleportType::TeleportPhysics);
+	
+	Projectile->Fire();
+
+	bProjectileAvailable = false;
 }
 
 void AASIPlayerPawn::ActivatePowerUpInputTriggered(const FInputActionValue& Value)
