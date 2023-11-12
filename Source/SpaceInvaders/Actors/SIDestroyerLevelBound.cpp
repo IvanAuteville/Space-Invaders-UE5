@@ -2,7 +2,6 @@
 
 
 #include "SIDestroyerLevelBound.h"
-//#include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 
 ASIDestroyerLevelBound::ASIDestroyerLevelBound()

@@ -2,7 +2,6 @@
 
 
 #include "ASIUFOActor.h"
-//#include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -11,13 +10,8 @@ AASIUFOActor::AASIUFOActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
-	//SceneComp->SetMobility(EComponentMobility::Movable);
-	//SetRootComponent(SceneComp);
-
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	StaticMeshComp->SetMobility(EComponentMobility::Movable);
-	//StaticMeshComp->SetupAttachment(RootComponent);
 	SetRootComponent(StaticMeshComp);
 
 	StaticMeshComp->SetGenerateOverlapEvents(false);
