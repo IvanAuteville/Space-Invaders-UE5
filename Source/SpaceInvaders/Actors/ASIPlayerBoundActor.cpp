@@ -24,7 +24,7 @@ AASIPlayerBoundActor::AASIPlayerBoundActor()
 	// Collision Presets NOTES:
 	// Custom Preset
 	// Collision Enabled (Query Only)
-	// OBJ TYPE: WorldStatic
+	// Object Type: WorldStatic
 	// Ignore everything, Block Pawn
 }
 
