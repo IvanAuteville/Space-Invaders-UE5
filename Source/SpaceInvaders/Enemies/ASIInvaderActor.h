@@ -9,6 +9,7 @@
 class UStaticMeshComponent;
 class USceneComponent;
 class AASIBaseProjectile;
+class AASIInvadersFormation;
 
 UCLASS()
 class SPACEINVADERS_API AASIInvaderActor : public AActor
@@ -18,6 +19,9 @@ class SPACEINVADERS_API AASIInvaderActor : public AActor
 public:	
 	AASIInvaderActor();
 
+	void SetFormation(AASIInvadersFormation* Formation);
+	void Move(const FVector& DeltaLocation);
+	void LateralBoundReached(const AActor* BoundActorCollidedWith);
 //protected:
 //	virtual void BeginPlay() override;
 //
@@ -34,4 +38,6 @@ private:
 	UPROPERTY(Category = "Components", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<AASIBaseProjectile> ProjectileClass = nullptr;
 
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	AASIInvadersFormation* MyFormation = nullptr;
 };

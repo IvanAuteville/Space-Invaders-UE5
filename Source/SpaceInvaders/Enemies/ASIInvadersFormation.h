@@ -4,6 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+#include "SpaceInvaders/Enums/FormationThreatLevel.h"
+#include "SpaceInvaders/Enums/HorizontalMovementType.h"
+#include "SpaceInvaders/Enums/VerticalMovementType.h"
+// #include "SpaceInvaders/Enums/InvadersFormationState.h"
+
 #include "ASIInvadersFormation.generated.h"
 
 class USceneComponent;
@@ -12,6 +18,45 @@ class AASIInvaderActor;
 
 struct FTimerHandle;
 
+USTRUCT(BlueprintType)
+struct FInvaderFormationSlot
+{
+	GENERATED_BODY()
+
+public:
+	FInvaderFormationSlot() = default;
+
+	FInvaderFormationSlot(const int32 NewCol, const int32 NewRow, AASIInvaderActor* NewInvader = nullptr)
+		: Column(NewCol), Row(NewRow), Invader(NewInvader) {};
+
+public:
+	int32 Column = -1;
+	int32 Row = -1;
+	AASIInvaderActor* Invader = nullptr;
+};
+
+// TODO: Move to Enums folder
+/* Very simple StateMachine like */
+UENUM(BlueprintType)
+enum class EInvadersFormationState : uint8
+{
+	None = 0	    	UMETA(DisplayName = "None"),
+	Spawning = 1		UMETA(DisplayName = "Spawning"),
+	Moving = 2			UMETA(DisplayName = "Moving"),
+	Slowed = 3			UMETA(DisplayName = "Slowed"),
+	Stopped = 4			UMETA(DisplayName = "Stopped"),
+	Reverse = 5			UMETA(DisplayName = "Reverse"),
+};
+
+// TODO: Move to Enums folder
+UENUM(BlueprintType)
+enum class EInvadersFormationAxisMovement : uint8
+{
+	None = 0	    	UMETA(DisplayName = "None"),
+	Horizontal = 1		UMETA(DisplayName = "Horizontal"),
+	Vertical = 2		UMETA(DisplayName = "Vertical"),
+};
+
 UCLASS()
 class SPACEINVADERS_API AASIInvadersFormation : public AActor
 {
@@ -19,10 +64,10 @@ class SPACEINVADERS_API AASIInvadersFormation : public AActor
 	
 public:	
 	AASIInvadersFormation();
-	
 	void Tick(float DeltaTime) override final;
 	
 	void SpawnInvaders();
+	void LateralBoundReached(const AActor* BoundActorCollidedWith);
 
 protected:
 	void BeginPlay() override final;
@@ -34,8 +79,15 @@ private:
 	UFUNCTION()
 	void InvaderSpawnSequence();
 
+	bool ShouldMove() const;
+	void Move(const float DeltaTime);
+
+	bool IsDestinationRowReached() const;
+	void UpdateCurrentRow();
+	void UpdateDestinationRow();
+
 private:
-	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	UPROPERTY(Category = "Component", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> FormationLeftRightCornerLocation = nullptr;
 
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
@@ -46,9 +98,46 @@ private:
 
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	float MaxSpawnSequenceTime = 0.10f;
+
+	// TODO: Calculate or cache Movement Speed base on EFormationThreatLevel
+	// Could be a DataAsset or DataTable too
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	double BaseMovementSpeed = 100.0;
+
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	double SlowMultiplier = 0.5;
 	
-	UPROPERTY(Category = "Instanced", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	/* All available Invaders in the Formation */
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TArray<AASIInvaderActor*> Invaders;
+
+	/* Grid like Formation, util for lots of operations */
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TArray<FInvaderFormationSlot> FormationGrid;
+	
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	EInvadersFormationState InvadersFormationState = EInvadersFormationState::None;
+
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	EInvadersFormationAxisMovement InvadersFormationAxisMovement = EInvadersFormationAxisMovement::Horizontal;
+
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	EHorizontalMovementType HorizontalMovementType = EHorizontalMovementType::Right;
+
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	EVerticalMovementType VerticalMovementType = EVerticalMovementType::Down;
+
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	EFormationThreatLevel FormationThreatLevel = EFormationThreatLevel::VeryLow;
+	
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	double CurrentRowY = 0.0;
+	
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	double DestinationRowY = 0.0;
+	
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	const AActor* LastBoundActorCollidedWith = nullptr;
 
 	/* Handle to manage the Sequence timer */
 	FTimerHandle InvadersSpawnSequenceTimerHandle;

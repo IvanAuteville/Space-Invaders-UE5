@@ -2,6 +2,7 @@
 
 
 #include "ASIInvaderActor.h"
+#include "SpaceInvaders/Enemies/ASIInvadersFormation.h"
 
 AASIInvaderActor::AASIInvaderActor()
 {
@@ -22,6 +23,21 @@ AASIInvaderActor::AASIInvaderActor()
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ProjectileSpawnPoint"));
 	ProjectileSpawnPoint->SetupAttachment(StaticMeshComp);
+}
+
+void AASIInvaderActor::SetFormation(AASIInvadersFormation* Formation)
+{
+	MyFormation = Formation;
+}
+
+void AASIInvaderActor::Move(const FVector& DeltaLocation)
+{
+	AddActorLocalOffset(DeltaLocation, true);
+}
+
+void AASIInvaderActor::LateralBoundReached(const AActor* BoundActorCollidedWith)
+{
+	MyFormation->LateralBoundReached(BoundActorCollidedWith);
 }
 
 //void AASIInvaderActor::BeginPlay()
