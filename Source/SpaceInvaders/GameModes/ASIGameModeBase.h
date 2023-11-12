@@ -24,7 +24,7 @@ protected:
 	void EndPlay(const EEndPlayReason::Type EndPlayReason) override final;
 
 private:
-	void SpawnPawn(UWorld& World);
+	void SpawnPawn();
 	void SpawnUFO();
 	void SpawnInvadersFormation(UWorld& World);
 
@@ -74,10 +74,18 @@ private:
 	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	AASIInvadersFormation* InvadersFormation = nullptr;
 
+	/* Pawn Spawn Timer */
+	FTimerHandle PlayerPawnSpawnTimerHandle;
+
+	UPROPERTY(Category = "Spawners", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float PlayerPawnSpawnDelay = 4.0f;
+
+
 	// -- TEST --
-	/* Handle to manage the UFO Spawn timer */
+	/* UFO Spawn Timer */
 	FTimerHandle UFOTestTimerHandle;
 	
+	// TODO: change to random
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	float TestSpawnUFODelayTime = 10.0f;
 	// -- END OF TEST --

@@ -42,10 +42,15 @@ void AASIGameModeBase::BeginPlay()
 
 	PlayerController = CastChecked<AASIPlayerController>(UGameplayStatics::GetPlayerController(World, 0));
 
-	SpawnPawn(*World);
-	PlayerController->Possess(Pawn);
-
 	SpawnInvadersFormation(*World);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		PlayerPawnSpawnTimerHandle,		// handle to cancel timer at a later time
+		this,							// the owning object
+		&ThisClass::SpawnPawn,			// function to call on elapsed
+		PlayerPawnSpawnDelay,			// float delay until elapsed
+		false);							// looping?
+	
 
 	// TEST Features:
 	GetWorld()->GetTimerManager().SetTimer(
@@ -63,15 +68,19 @@ void AASIGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 }
 
-void AASIGameModeBase::SpawnPawn(UWorld& World)
+void AASIGameModeBase::SpawnPawn()
 {
+	UWorld* World = GetWorld();
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	FVector SpawnLocation = PlayerSpawner->GetActorLocation();
 	FRotator SpawnRotation = PlayerSpawner->GetActorRotation();
 
-	Pawn = World.SpawnActor<AASIPlayerPawn>(PlayerPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
+	Pawn = World->SpawnActor<AASIPlayerPawn>(PlayerPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
+
+	PlayerController->Possess(Pawn);
 }
 
 void AASIGameModeBase::SpawnUFO()
