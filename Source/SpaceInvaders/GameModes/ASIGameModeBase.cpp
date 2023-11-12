@@ -10,6 +10,7 @@
 #include "SpaceInvaders/Actors/SISpawnLocationBase.h"
 #include "SpaceInvaders/Player/ASIPlayerPawn.h"
 #include "SpaceInvaders/Player/ASIPlayerController.h"
+#include "SpaceInvaders/Enemies/ASIInvadersFormation.h"
 #include "SpaceInvaders/Enemies/ASIUFOActor.h"
 
 
@@ -41,14 +42,28 @@ void AASIGameModeBase::BeginPlay()
 
 	PlayerController = CastChecked<AASIPlayerController>(UGameplayStatics::GetPlayerController(World, 0));
 
-	SpawnPawn(World);
+	SpawnPawn(*World);
 	PlayerController->Possess(Pawn);
 
+	SpawnInvadersFormation(*World);
+
 	// TEST Features:
-	// SpawnUFO(World);
+	GetWorld()->GetTimerManager().SetTimer(
+		UFOTestTimerHandle,				// handle to cancel timer at a later time
+		this,							// the owning object
+		&ThisClass::SpawnUFO,			// function to call on elapsed
+		TestSpawnUFODelayTime,			// float delay until elapsed
+		false);							// looping?
 }
 
-void AASIGameModeBase::SpawnPawn(UWorld* World)
+void AASIGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+}
+
+void AASIGameModeBase::SpawnPawn(UWorld& World)
 {
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -56,11 +71,14 @@ void AASIGameModeBase::SpawnPawn(UWorld* World)
 	FVector SpawnLocation = PlayerSpawner->GetActorLocation();
 	FRotator SpawnRotation = PlayerSpawner->GetActorRotation();
 
-	Pawn = World->SpawnActor<AASIPlayerPawn>(PlayerPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
+	Pawn = World.SpawnActor<AASIPlayerPawn>(PlayerPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
 }
 
-void AASIGameModeBase::SpawnUFO(UWorld* World)
+void AASIGameModeBase::SpawnUFO()
 {
+	UWorld* World = GetWorld();
+	World->GetTimerManager().ClearTimer(UFOTestTimerHandle);
+
 	// We already have an UFO in the Scene 
 	if (IsValid(UFO))
 		return;
@@ -77,4 +95,15 @@ void AASIGameModeBase::SpawnUFO(UWorld* World)
 	UFO = World->SpawnActor<AASIUFOActor>(UFOClass, SpawnLocation, SpawnRotation, SpawnParams);
 	const EHorizontalMovementType UFOMovementDir = bSpawnOnLeftSide ? EHorizontalMovementType::Right : EHorizontalMovementType::Left;
 	UFO->SetHorizontalMovementDirection(UFOMovementDir);
+}
+
+void AASIGameModeBase::SpawnInvadersFormation(UWorld& World)
+{
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	FVector SpawnLocation = InvadersSpawner->GetActorLocation();
+	FRotator SpawnRotation = InvadersSpawner->GetActorRotation();
+
+	InvadersFormation = World.SpawnActor<AASIInvadersFormation>(InvadersFormationClass, SpawnLocation, SpawnRotation, SpawnParams);
 }

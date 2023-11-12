@@ -12,19 +12,21 @@ class AASIPlayerPawn;
 class AASIUFOActor;
 class AASIInvadersFormation;
 
-/**
- * 
- */
+struct FTimerHandle;
+
 UCLASS()
 class SPACEINVADERS_API AASIGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
 protected:
-	virtual void BeginPlay() override final;
+	void BeginPlay() override final;
+	void EndPlay(const EEndPlayReason::Type EndPlayReason) override final;
 
-	void SpawnPawn(UWorld* World);
-	void SpawnUFO(UWorld* World);
+private:
+	void SpawnPawn(UWorld& World);
+	void SpawnUFO();
+	void SpawnInvadersFormation(UWorld& World);
 
 private:
 	UPROPERTY(Category = "Spawners", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
@@ -69,6 +71,14 @@ private:
 	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	AASIUFOActor* UFO = nullptr;
 
-	//UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	//AASIInvadersFormation* InvadersFormation = nullptr;
+	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	AASIInvadersFormation* InvadersFormation = nullptr;
+
+	// -- TEST --
+	/* Handle to manage the UFO Spawn timer */
+	FTimerHandle UFOTestTimerHandle;
+	
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float TestSpawnUFODelayTime = 10.0f;
+	// -- END OF TEST --
 };
