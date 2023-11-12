@@ -6,10 +6,11 @@
 #include "GameFramework/GameModeBase.h"
 #include "ASIGameModeBase.generated.h"
 
-class ASIPlayerSpawner;
-class ASIInvadersSpawner;
-class AASIPlayerPawn;
+class ASISpawnLocationBase;
 class AASIPlayerController;
+class AASIPlayerPawn;
+class AASIUFOActor;
+class AASIInvadersFormation;
 
 /**
  * 
@@ -23,26 +24,51 @@ protected:
 	virtual void BeginPlay() override final;
 
 	void SpawnPawn(UWorld* World);
+	void SpawnUFO(UWorld* World);
 
 private:
 	UPROPERTY(Category = "Spawners", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
-	TSubclassOf<ASIPlayerSpawner> PlayerSpawnerClass = nullptr;
+	TSubclassOf<ASISpawnLocationBase> PlayerSpawnerClass = nullptr;
 
 	UPROPERTY(Category = "Spawners", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
-	TSubclassOf<ASIInvadersSpawner> InvadersSpawnerClass = nullptr;
+	TSubclassOf<ASISpawnLocationBase> InvadersSpawnerClass = nullptr;
+
+	UPROPERTY(Category = "Spawners", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TSubclassOf<ASISpawnLocationBase> LeftUFOSpawnerClass = nullptr;
+
+	UPROPERTY(Category = "Spawners", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TSubclassOf<ASISpawnLocationBase> RightUFOSpawnerClass = nullptr;
 
 	UPROPERTY(Category = "PlayerPawn", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TSubclassOf<AASIPlayerPawn> PlayerPawnClass = nullptr;
 
-	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	ASIPlayerSpawner* PlayerSpawner = nullptr;
+	UPROPERTY(Category = "Enemies", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TSubclassOf<AASIInvadersFormation> InvadersFormationClass = nullptr;
+
+	UPROPERTY(Category = "Enemies", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TSubclassOf<AASIUFOActor> UFOClass = nullptr;
 
 	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	ASIInvadersSpawner* InvadersSpawner = nullptr;
+	ASISpawnLocationBase* PlayerSpawner = nullptr;
+
+	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	ASISpawnLocationBase* InvadersSpawner = nullptr;
 	
+	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	ASISpawnLocationBase* LeftUFOSpawner = nullptr;
+	
+	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	ASISpawnLocationBase* RightUFOSpawner = nullptr;
+
 	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	AASIPlayerController* PlayerController = nullptr;
 
 	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	AASIPlayerPawn* Pawn = nullptr;
+
+	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	AASIUFOActor* UFO = nullptr;
+
+	//UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	//AASIInvadersFormation* InvadersFormation = nullptr;
 };

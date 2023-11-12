@@ -5,11 +5,13 @@
 
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "Math/UnrealMathUtility.h"
 
-#include "SpaceInvaders/Actors/SIPlayerSpawner.h"
-#include "SpaceInvaders/Actors/SIInvadersSpawner.h"
+#include "SpaceInvaders/Actors/SISpawnLocationBase.h"
 #include "SpaceInvaders/Player/ASIPlayerPawn.h"
 #include "SpaceInvaders/Player/ASIPlayerController.h"
+#include "SpaceInvaders/Enemies/ASIUFOActor.h"
+
 
 // TODO: Move to Utils
 namespace GameModeUtils
@@ -34,11 +36,16 @@ void AASIGameModeBase::BeginPlay()
 
 	PlayerSpawner = GameModeUtils::FindSingleActor(*World, PlayerSpawnerClass);
 	InvadersSpawner = GameModeUtils::FindSingleActor(*World, InvadersSpawnerClass);
+	LeftUFOSpawner = GameModeUtils::FindSingleActor(*World, LeftUFOSpawnerClass);
+	RightUFOSpawner = GameModeUtils::FindSingleActor(*World, RightUFOSpawnerClass);
+
 	PlayerController = CastChecked<AASIPlayerController>(UGameplayStatics::GetPlayerController(World, 0));
 
 	SpawnPawn(World);
-
 	PlayerController->Possess(Pawn);
+
+	// TEST Features:
+	// SpawnUFO(World);
 }
 
 void AASIGameModeBase::SpawnPawn(UWorld* World)
@@ -50,4 +57,24 @@ void AASIGameModeBase::SpawnPawn(UWorld* World)
 	FRotator SpawnRotation = PlayerSpawner->GetActorRotation();
 
 	Pawn = World->SpawnActor<AASIPlayerPawn>(PlayerPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
+}
+
+void AASIGameModeBase::SpawnUFO(UWorld* World)
+{
+	// We already have an UFO in the Scene 
+	if (IsValid(UFO))
+		return;
+
+	const bool bSpawnOnLeftSide = FMath::RandBool();
+	ASISpawnLocationBase* UFOSpawnLocation = bSpawnOnLeftSide ? LeftUFOSpawner : RightUFOSpawner;
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	FVector SpawnLocation = UFOSpawnLocation->GetActorLocation();
+	FRotator SpawnRotation = UFOSpawnLocation->GetActorRotation();
+
+	UFO = World->SpawnActor<AASIUFOActor>(UFOClass, SpawnLocation, SpawnRotation, SpawnParams);
+	const EHorizontalMovementType UFOMovementDir = bSpawnOnLeftSide ? EHorizontalMovementType::Right : EHorizontalMovementType::Left;
+	UFO->SetHorizontalMovementDirection(UFOMovementDir);
 }
