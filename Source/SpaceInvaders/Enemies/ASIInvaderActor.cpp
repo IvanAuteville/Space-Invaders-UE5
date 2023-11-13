@@ -56,3 +56,21 @@ void AASIInvaderActor::LateralBoundReached(const AActor* BoundActorCollidedWith)
 {
 	MyFormation->LateralBoundReached(BoundActorCollidedWith);
 }
+
+void AASIInvaderActor::HandleDestruction(AActor* DestroyerActor)
+{
+	// TODO: VFXs
+	//UGameplayStatics::SpawnEmitterAtLocation(this, DeathParticles, GetActorLocation(), GetActorRotation());
+
+	// TODO: Sounds
+	//UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
+
+	// TODO: Fire CallBack for GameMode (Score) and Formation (Update Amount of Invaders and Grid Composition)
+	//AASIBaseProjectile* ProjectileActor = Cast<AASIBaseProjectile>(DestroyerActor);
+	//if (IsValid(ProjectileActor) && OnPlayerPawnKilled.IsBound())
+	//{
+	//	OnPlayerPawnKilled.Broadcast();
+	//}
+
+	Destroy(false, true);
+}

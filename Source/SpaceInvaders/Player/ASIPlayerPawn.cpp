@@ -181,7 +181,7 @@ void AASIPlayerPawn::ActivatePowerUp()
 	// TODO
 }
 
-void AASIPlayerPawn::HandleDestruction(AActor* Destroyer)
+void AASIPlayerPawn::HandleDestruction(AActor* DestroyerActor)
 {
 	// TODO: VFXs
 	//UGameplayStatics::SpawnEmitterAtLocation(this, DeathParticles, GetActorLocation(), GetActorRotation());
@@ -189,7 +189,7 @@ void AASIPlayerPawn::HandleDestruction(AActor* Destroyer)
 	// TODO: Sounds
 	//UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
 
-	AASIBaseProjectile* ProjectileActor = Cast<AASIBaseProjectile>(Destroyer);
+	AASIBaseProjectile* ProjectileActor = Cast<AASIBaseProjectile>(DestroyerActor);
 	if (IsValid(ProjectileActor) && OnPlayerPawnKilled.IsBound())
 	{
 		OnPlayerPawnKilled.Broadcast();

@@ -71,7 +71,7 @@ void AASIUFOActor::SetHorizontalMovementDirection(const EHorizontalMovementType 
 	HorizontalMovementType = MovementDirection;
 }
 
-void AASIUFOActor::HandleDestruction(AActor* Destroyer)
+void AASIUFOActor::HandleDestruction(AActor* DestroyerActor)
 {
 	// TODO: VFX
 	//UGameplayStatics::SpawnEmitterAtLocation(this, DeathParticles, GetActorLocation(), GetActorRotation());
@@ -81,7 +81,7 @@ void AASIUFOActor::HandleDestruction(AActor* Destroyer)
 	
 	if (OnUFODestroyed.IsBound())
 	{
-		OnUFODestroyed.Broadcast(Destroyer);
+		OnUFODestroyed.Broadcast(DestroyerActor);
 	}
 
 	Destroy();

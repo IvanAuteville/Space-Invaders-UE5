@@ -103,19 +103,30 @@ void AASIBaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	if (OtherActor == nullptr || OtherActor == this || OtherActor == MyOwner)
 		return;
 
-	// TODO: do something with OtherActor
 	UE_LOG(LogTemp, Warning, TEXT("Projectile Collision with %s"), *OtherActor->GetName());
 
-	// TODO: VFX
-	//UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());
+	IDestructible* Destructible = Cast<IDestructible>(OtherActor);
+	if (Destructible)
+	{
+		Destructible->HandleDestruction(this);
+	}
+
+	// "Self Destruct" (Pooled: Hide, Disable, etc)
+	HandleDestruction(OtherActor);
 	
-	// TODO: Sound
-	//UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
-
-	Disable();
-
 	if (!OnProjectileHit.IsBound())
 		return;
 
 	OnProjectileHit.Broadcast();
+}
+
+void AASIBaseProjectile::HandleDestruction(AActor* DestroyerActor)
+{
+	// TODO: VFX
+	//UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());
+
+	// TODO: Sound
+	//UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+
+	Disable();
 }

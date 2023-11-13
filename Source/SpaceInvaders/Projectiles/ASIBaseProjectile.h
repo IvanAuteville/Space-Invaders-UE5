@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "SpaceInvaders/Interfaces/Destructible.h"
 #include "ASIBaseProjectile.generated.h"
 
 class UProjectileMovementComponent;
@@ -16,13 +17,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnProjectileHit);
 
 // TODO: TYPO double A
 UCLASS()
-class SPACEINVADERS_API AASIBaseProjectile : public AActor
+class SPACEINVADERS_API AASIBaseProjectile : public AActor, public IDestructible
 {
 	GENERATED_BODY()
 	
 public:	
 	AASIBaseProjectile();
 	void Fire();
+
+	/** Start IDestructible Interface **/
+	void HandleDestruction(AActor* DestroyerActor) override final;
+	/** End IDestructible Interface **/
 
 public:
 	// Delegates

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "SpaceInvaders/Enums/HorizontalMovementType.h"
+#include "SpaceInvaders/Interfaces/Destructible.h"
 #include "ASIUFOActor.generated.h"
 
 class UStaticMeshComponent;
@@ -13,7 +14,7 @@ class UAudioComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUFODestroyed, AActor*, Destroyer);
 
 UCLASS(meta = (PrioritizeCategories = "UFOSettings UFOInstance Components"))
-class SPACEINVADERS_API AASIUFOActor : public AActor
+class SPACEINVADERS_API AASIUFOActor : public AActor, public IDestructible
 {
 	GENERATED_BODY()
 	
@@ -23,7 +24,9 @@ public:
 
 	void SetHorizontalMovementDirection(const EHorizontalMovementType MovementDirection);
 
-	void HandleDestruction(AActor* Destroyer);
+	/** Start IDestructible Interface **/
+	void HandleDestruction(AActor* DestroyerActor) override final;
+	/** End IDestructible Interface **/
 
 public:
 	// Delegates

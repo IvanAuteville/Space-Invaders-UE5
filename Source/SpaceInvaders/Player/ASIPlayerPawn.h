@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "SpaceInvaders/Interfaces/Destructible.h"
 #include "ASIPlayerPawn.generated.h"
 
 class USceneComponent;
@@ -22,7 +23,7 @@ class AASIPlayerController;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerPawnKilled);
 
 UCLASS(meta = (PrioritizeCategories = "PlayerPawnSettings PlayerPawnInputs PlayerPawnInstance Components"))
-class SPACEINVADERS_API AASIPlayerPawn : public APawn
+class SPACEINVADERS_API AASIPlayerPawn : public APawn, public IDestructible
 {
 	GENERATED_BODY()
 
@@ -31,7 +32,9 @@ public:
 	void Tick(float DeltaTime) override final;
 	void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
 
-	void HandleDestruction(AActor* Destroyer);
+	/** Start IDestructible Interface **/
+	void HandleDestruction(AActor* DestroyerActor) override final;
+	/** End IDestructible Interface **/
 
 public:
 	UPROPERTY()

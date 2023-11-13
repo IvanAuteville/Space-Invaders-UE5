@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "SpaceInvaders/Interfaces/Destructible.h"
 #include "ASIInvaderActor.generated.h"
 
 class UStaticMeshComponent;
@@ -12,7 +13,7 @@ class AASIBaseProjectile;
 class AASIInvadersFormation;
 
 UCLASS()
-class SPACEINVADERS_API AASIInvaderActor : public AActor
+class SPACEINVADERS_API AASIInvaderActor : public AActor, public IDestructible
 {
 	GENERATED_BODY()
 	
@@ -22,6 +23,10 @@ public:
 	void SetFormation(AASIInvadersFormation* Formation);
 	void Move(const FVector& DeltaLocation);
 	void LateralBoundReached(const AActor* BoundActorCollidedWith);
+
+	/** Start IDestructible Interface **/
+	void HandleDestruction(AActor* DestroyerActor) override final;
+	/** End IDestructible Interface **/
 
 protected:
 	void BeginPlay() override final;
