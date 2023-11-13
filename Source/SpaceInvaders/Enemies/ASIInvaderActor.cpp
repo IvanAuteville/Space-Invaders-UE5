@@ -12,7 +12,7 @@ AASIInvaderActor::AASIInvaderActor()
 	// Init Components
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	SetRootComponent(StaticMeshComp);
-	StaticMeshComp->SetGenerateOverlapEvents(false);
+	StaticMeshComp->SetGenerateOverlapEvents(true);
 	StaticMeshComp->SetNotifyRigidBodyCollision(false);
 	StaticMeshComp->CanCharacterStepUpOn = ECB_No;
 	StaticMeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
@@ -34,19 +34,12 @@ void AASIInvaderActor::BeginPlay()
 	StaticMeshComp->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
 }
 
+// TODO: check if neccesary
 void AASIInvaderActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (OtherActor == nullptr || OtherActor == this)
 		return;
-
-	// NOTE: it would be a better practice to handle this through a Destructible Interface, 
-	// but I'm running low on time and this is a very simple way of handling it
-	AASIPlayerPawn* PlayerPawn = Cast<AASIPlayerPawn>(OtherActor);
-	if (!IsValid(PlayerPawn))
-		return;
-	
-	PlayerPawn->HandleDestruction(this);
 }
 
 void AASIInvaderActor::SetFormation(AASIInvadersFormation* Formation)

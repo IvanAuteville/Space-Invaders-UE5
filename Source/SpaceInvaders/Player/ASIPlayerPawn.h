@@ -19,6 +19,8 @@ class AASIPlayerController;
 
 //class UNiagaraSystem;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerPawnKilled);
+
 UCLASS(meta = (PrioritizeCategories = "PlayerPawnSettings PlayerPawnInputs PlayerPawnInstance Components"))
 class SPACEINVADERS_API AASIPlayerPawn : public APawn
 {
@@ -26,13 +28,18 @@ class SPACEINVADERS_API AASIPlayerPawn : public APawn
 
 public:
 	AASIPlayerPawn();
-	virtual void Tick(float DeltaTime) override final;
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
+	void Tick(float DeltaTime) override final;
+	void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
 
 	void HandleDestruction(AActor* Destroyer);
 
+public:
+	UPROPERTY()
+	FOnPlayerPawnKilled OnPlayerPawnKilled;
+
 protected:
-	virtual void BeginPlay() override final;
+	void BeginPlay() override final;
+	void EndPlay(const EEndPlayReason::Type EndPlayReason) override final;
 
 private:
 	void AddInputMapping();
@@ -75,12 +82,10 @@ private:
 	//UPROPERTY(Category = "CameraPawnVFXs", EditAnywhere, meta = (AllowPrivateAccess = true))
 	//FVector MoveOrderCursorEffectScale = FVector(1.0);
 	
+	// TODO: Sounds
 	//UPROPERTY(EditAnywhere, Category = "Pawn Variables")
 	//USoundBase* DeathSound;
 	
-	//UPROPERTY(EditAnywhere, Category = "Pawn Variables")
-	//TSubclassOf<UCameraShakeBase> DeathCameraShakeClass;
-
 	// Input
 	UPROPERTY(Category = "PlayerPawnInputs", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UInputMappingContext> PlayerPawnInputMappingContext = nullptr;
@@ -105,7 +110,7 @@ private:
 	float CachedMovementInputValue = 0.0f;
 
 	AASIPlayerController* PlayerController = nullptr;
-
 	AASIBaseProjectile* Projectile = nullptr;
+
 	bool bProjectileAvailable = false;
 };

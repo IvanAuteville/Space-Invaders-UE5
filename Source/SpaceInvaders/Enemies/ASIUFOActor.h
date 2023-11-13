@@ -34,11 +34,10 @@ protected:
 	void BeginPlay() override final;
 
 private:
-	//UFUNCTION()
-	//void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	//		FVector NormalImpulse, const FHitResult& Hit);
-
 	void Move(const float DeltaTime);
+
+	UFUNCTION()
+	void OnGamePaused(const bool bPaused);
 
 private:
 	UPROPERTY(Category = "Components", VisibleAnywhere, meta = (AllowPrivateAccess = true))
@@ -54,5 +53,5 @@ private:
 	float BaseMovementSpeed = 200.0f;
 
 	UPROPERTY(Category = "UFOInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	bool bEnabled = false;
+	bool bEnabled = true;
 };

@@ -79,6 +79,9 @@ private:
 	UFUNCTION()
 	void InvaderSpawnSequence();
 
+	UFUNCTION()
+	void OnGamePaused(const bool bPaused);
+
 	bool ShouldMove() const;
 	void Move(const float DeltaTime);
 

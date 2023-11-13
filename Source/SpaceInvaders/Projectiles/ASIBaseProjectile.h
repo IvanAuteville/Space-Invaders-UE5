@@ -40,6 +40,9 @@ private:
 	void Enable();
 	void Disable();
 
+	UFUNCTION()
+	void OnGamePaused(const bool bPaused);
+
 private:
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> SceneComp = nullptr;
@@ -74,4 +77,7 @@ private:
 	/* Offset from Scene Component to adjust the Mesh Pivot properly, set via BPs */
 	UPROPERTY(Category = "Variables", EditAnywhere, meta = (AllowPrivateAccess = true))
 	FVector MeshOffset = FVector::Zero();
+
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	bool bEnabled = true;
 };

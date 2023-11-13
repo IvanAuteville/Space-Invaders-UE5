@@ -2,9 +2,12 @@
 
 
 #include "ASIInvadersFormation.h"
+#include "Engine/TimerHandle.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "SpaceInvaders/Enemies/SIFormationDataAsset.h"
 #include "SpaceInvaders/Enemies/ASIInvaderActor.h"
-#include "Engine/TimerHandle.h"
+#include "SpaceInvaders/GameModes/ASIGameModeBase.h"
 
 //#define UE_LOG_ENABLED
 
@@ -20,6 +23,11 @@ AASIInvadersFormation::AASIInvadersFormation()
 void AASIInvadersFormation::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(this));
+	MyGameMode->OnGamePaused.AddDynamic(this, &ThisClass::OnGamePaused);
+	// TODO: unnecessary I think
+	// MyGameMode->OnPawnRespawned.AddDynamic(this, &ThisClass::OnGamePaused);
 
 	UpdateCurrentRow();
 	UpdateDestinationRow();
@@ -130,6 +138,12 @@ void AASIInvadersFormation::InvaderSpawnSequence()
 		AASIInvaderActor* Invader = Invaders[InvaderSequenceIndex];
 		Invader->SetActorHiddenInGame(false);
 	}
+}
+
+void AASIInvadersFormation::OnGamePaused(const bool bPaused)
+{
+	SetActorTickEnabled(!bPaused);
+	InvadersFormationState = bPaused ? EInvadersFormationState::Stopped : EInvadersFormationState::Moving;
 }
 
 bool AASIInvadersFormation::ShouldMove() const

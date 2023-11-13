@@ -21,14 +21,25 @@ class USIFormationDataAsset;
 
 struct FTimerHandle;
 
+UENUM()
+enum class EGameOverType : uint8
+{
+	None = 0	    	UMETA(DisplayName = "None"),
+	GameWon = 1			UMETA(DisplayName = "GameWon"),
+	GameLost = 2		UMETA(DisplayName = "GameLost"),
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePaused, bool, bPaused);
+
 UCLASS()
 class SPACEINVADERS_API AASIGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-	void GameOver(); // TODO: delete
-
+	// Delegates
+	UPROPERTY()
+	FOnGamePaused OnGamePaused;
 
 protected:
 	void BeginPlay() override final;
@@ -37,10 +48,15 @@ protected:
 private:
 	void SetReferences();
 	void GameStart();
-	// void GameOver(); // TODO: restore
+	
+	UFUNCTION()
+	void GameOver(const EGameOverType GameOverType);
+
 	void LevelTransition();
 
 	void SpawnPawn();
+	void ReSpawnPlayerPawn();
+
 	void SpawnUFO();
 	void SpawnInvadersFormation();
 
@@ -52,9 +68,11 @@ private:
 	UFUNCTION()
 	void OnUFODestroyed(AActor* DestroyerActor);
 
-	// TODO: MORE CALLBACKS
-	//UFUNCTION()
-	//void OnFactionDied(ACSFaction* Faction);
+	UFUNCTION()
+	void OnPlayerPawnDestroyed();
+
+	UFUNCTION()
+	void OnInvadersReachedPlayerRow();
 
 private:
 	// Spawners
@@ -113,6 +131,9 @@ private:
 
 	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	AASIHUD* MyHUD = nullptr;
+
+	UPROPERTY(Category = "Instances", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	EGameOverType CurrentGameOverType = EGameOverType::None;
 
 	// Timers
 	UPROPERTY(Category = "Timers", VisibleAnywhere, meta = (AllowPrivateAccess = true))

@@ -5,6 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "SpaceInvaders/GameModes/ASIGameModeBase.h"
+
 
 AASIUFOActor::AASIUFOActor()
 {
@@ -31,6 +33,39 @@ AASIUFOActor::AASIUFOActor()
 	AudioComp->SetPitchMultiplier(1.0f);
 }
 
+void AASIUFOActor::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(this));
+	MyGameMode->OnGamePaused.AddDynamic(this, &ThisClass::OnGamePaused);
+
+	AudioComp->Play();
+}
+
+void AASIUFOActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!bEnabled)
+		return;
+
+	Move(DeltaTime);
+}
+
+void AASIUFOActor::Move(const float DeltaTime)
+{
+	const float Direction = (HorizontalMovementType == EHorizontalMovementType::Right) ? 1.0f : -1.0f;
+	FVector LocalOffset(Direction * BaseMovementSpeed * DeltaTime, 0.0, 0.0);
+	AddActorLocalOffset(LocalOffset, true);
+}
+
+void AASIUFOActor::OnGamePaused(const bool bPaused)
+{
+	SetActorTickEnabled(!bPaused);
+	bEnabled = !bPaused;
+}
+
 void AASIUFOActor::SetHorizontalMovementDirection(const EHorizontalMovementType MovementDirection)
 {
 	HorizontalMovementType = MovementDirection;
@@ -51,54 +86,3 @@ void AASIUFOActor::HandleDestruction(AActor* Destroyer)
 
 	Destroy();
 }
-
-void AASIUFOActor::BeginPlay()
-{
-	Super::BeginPlay();
-
-	//StaticMeshComp->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
-
-	bEnabled = true;
-
-	AudioComp->Play();
-}
-
-void AASIUFOActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (!bEnabled)
-		return;
-	
-	Move(DeltaTime);
-}
-
-void AASIUFOActor::Move(const float DeltaTime)
-{
-	const float Direction = (HorizontalMovementType == EHorizontalMovementType::Right) ? 1.0f : -1.0f;
-	FVector LocalOffset(Direction * BaseMovementSpeed * DeltaTime, 0.0, 0.0);
-	AddActorLocalOffset(LocalOffset, true);
-}
-
-//void AASIUFOActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
-//	FVector NormalImpulse, const FHitResult& Hit)
-//{
-//	if (OtherActor == nullptr || OtherActor == this)
-//		return;
-//
-//	// TODO: do something with OtherActor
-//	UE_LOG(LogTemp, Warning, TEXT("UFO Collision with %s"), *OtherActor->GetName());
-//
-//	// TODO: VFX
-//	//UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());
-//
-//	// TODO: Sound
-//	//UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
-//
-//	Disable();
-//
-//	if (!OnProjectileHit.IsBound())
-//		return;
-//
-//	OnProjectileHit.Broadcast();
-//}

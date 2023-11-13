@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "SpaceInvaders/GameModes/ASIGameModeBase.h"
 
 AASIBaseProjectile::AASIBaseProjectile()
 {
@@ -66,16 +67,28 @@ void AASIBaseProjectile::BeginPlay()
 	
 	MeshComp->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
 
+	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(this));
+	MyGameMode->OnGamePaused.AddDynamic(this, &ThisClass::OnGamePaused);
+
 	Disable();
 
 	// TODO: Sound
 	// UGameplayStatics::PlaySoundAtLocation(this, LaunchSound, GetActorLocation());
 }
 
+void AASIBaseProjectile::OnGamePaused(const bool bPaused)
+{
+	ProjectileMovementComp->StopMovementImmediately();
+	SetActorTickEnabled(!bPaused);
+	bEnabled = !bPaused;
+}
+
 void AASIBaseProjectile::Fire()
 {
-	Enable();
+	if(!bEnabled)
+		return;
 	
+	Enable();
 	ProjectileMovementComp->SetVelocityInLocalSpace(FVector(0.0, -Speed, 0.0));
 }
 

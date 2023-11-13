@@ -14,6 +14,7 @@ class SPACEINVADERS_API AASIGameStateBase : public AGameStateBase
 public:
 	int32 GetPlayer1Lives() const { return Player1Lives; }
 	void SetPlayer1Lives(const int32 Lives) { Player1Lives = Lives; }
+	void ReducePlayer1Lives() { --Player1Lives; }
 
 	int32 GetPlayer1Score() const { return Player1Score; }
 	void SetPlayer1Score(const int32 Score) { Player1Score = Score; }

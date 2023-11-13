@@ -21,7 +21,6 @@
 #include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
 #include "SpaceInvaders/Player/ASIPlayerController.h"
 #include "SpaceInvaders/Utils/InputUtils.h"
-#include "SpaceInvaders/GameModes/ASIGameModeBase.h" // TODO: delete -> replace with Callbacks/Delegates
 
 AASIPlayerPawn::AASIPlayerPawn()
 {
@@ -34,6 +33,7 @@ AASIPlayerPawn::AASIPlayerPawn()
 	StaticMeshComp->SetNotifyRigidBodyCollision(false);
 	StaticMeshComp->CanCharacterStepUpOn = ECB_No;
 	StaticMeshComp->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+	
 	// Collision Presets NOTES:
 	// Custom Preset
 	// Collision Enabled (Query Only)
@@ -55,14 +55,16 @@ void AASIPlayerPawn::BeginPlay()
 	Super::BeginPlay();
 
 	PlayerController = Cast<AASIPlayerController>(GetController());
-
-	check(PlayerController);
-
-	//PlayerController->SetViewTargetWithBlend(this);
 	
 	AddInputMapping();
-
 	SpawnProjectile();
+}
+
+void AASIPlayerPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	OnPlayerPawnKilled.Clear();
 }
 
 void AASIPlayerPawn::SpawnProjectile()
@@ -135,8 +137,6 @@ void AASIPlayerPawn::MoveInputTriggered(const FInputActionValue& Value)
 		return;
 
 	CachedMovementInputValue = Value.Get<float>();
-
-	//UE_LOG(LogTemp, Warning, TEXT("Moving"));
 }
 
 void AASIPlayerPawn::FireInputTriggered(const FInputActionValue& Value)
@@ -152,7 +152,7 @@ void AASIPlayerPawn::ActivatePowerUpInputTriggered(const FInputActionValue& Valu
 	if (Value.GetValueType() != EInputActionValueType::Boolean)
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("PowerUp!"));
+	ActivatePowerUp();
 }
 
 void AASIPlayerPawn::Move(float DeltaTime)
@@ -176,30 +176,24 @@ void AASIPlayerPawn::Fire()
 
 void AASIPlayerPawn::ActivatePowerUp()
 {
+	UE_LOG(LogTemp, Warning, TEXT("ActivatePowerUp!"));
 
+	// TODO
 }
 
 void AASIPlayerPawn::HandleDestruction(AActor* Destroyer)
 {
 	// TODO: VFXs
 	//UGameplayStatics::SpawnEmitterAtLocation(this, DeathParticles, GetActorLocation(), GetActorRotation());
+	
 	// TODO: Sounds
 	//UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
 
-	// TODO: check
-	//if (Destroyer == nullptr)
-	//	return;
-
-	//AASIPlayerPawn* PlayerPawn = Cast<AASIPlayerPawn>(Destroyer);
-	//if (!IsValid(PlayerPawn))
-	//	return;
-
-	// TODO: Delegate Call
-
-	// TEST ONLY
-	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	MyGameMode->GameOver();
-	//---
+	AASIBaseProjectile* ProjectileActor = Cast<AASIBaseProjectile>(Destroyer);
+	if (IsValid(ProjectileActor) && OnPlayerPawnKilled.IsBound())
+	{
+		OnPlayerPawnKilled.Broadcast();
+	}
 
 	Destroy(false, true);
 }

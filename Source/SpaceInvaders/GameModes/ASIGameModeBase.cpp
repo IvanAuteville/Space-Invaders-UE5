@@ -17,6 +17,7 @@
 #include "SpaceInvaders/GameInstances/USIGameInstance.h"
 #include "SpaceInvaders/HUDs/ASIHUD.h"
 #include "SpaceInvaders/Enemies/SIFormationDataAsset.h"
+#include "SpaceInvaders/Actors/SIInvadersGameOverBound.h"
 
 // TODO: Move to Utils
 namespace GameModeUtils
@@ -61,6 +62,10 @@ void AASIGameModeBase::SetReferences()
 	MyGameState = Cast<AASIGameStateBase>(UGameplayStatics::GetGameState(World));
 	MyGameInstance = Cast<UUSIGameInstance>(UGameplayStatics::GetGameInstance(World));
 	MyHUD = Cast<AASIHUD>(MyPlayerController->GetHUD());
+
+	UClass* ActorClass = ASIInvadersGameOverBound::StaticClass();
+	ASIInvadersGameOverBound* GameOverBoundActor = GameModeUtils::FindSingleActor<ASIInvadersGameOverBound>(*World, ActorClass);
+	GameOverBoundActor->OnInvadersReachedBottom.AddDynamic(this, &ThisClass::OnInvadersReachedPlayerRow);
 }
 
 void AASIGameModeBase::GameStart()
@@ -77,56 +82,6 @@ void AASIGameModeBase::GameStart()
 	SetUFORespawnTimer();
 }
 
-void AASIGameModeBase::GameOver()
-{
-	const bool bGameWon = true; // TODO
-
-	UWorld* World = GetWorld();
-
-	// TODO: Sound
-	//LevelAmbientSound->Stop();
-	//UGameplayStatics::PlaySound2D(World, PlayerFaction == LoserFaction ? DefeatSound : VictorySound);
-
-	MyGameInstance->SetPlayer1CurrentScore(MyGameState->GetPlayer1Score());
-	MyGameInstance->SetPlayer1HiScore(MyGameState->GetPlayer1Score());
-
-
-	// TODO: UI WIDGETS
-	//if (bGameWon)
-	//{
-	//	HUD->ShowVictoryWidgets();
-	//}
-	//else
-	//{
-	//	HUD->ShowDefeatWidgets();
-	//}
-
-	GetWorld()->GetTimerManager().SetTimer(
-		LevelTransitionTimerHandle,		// handle to cancel timer at a later time
-		this,							// the owning object
-		&ThisClass::LevelTransition,	// function to call on elapsed
-		LevelTransitionDelayTime,		// float delay until elapsed
-		false);							// looping?
-}
-
-void AASIGameModeBase::LevelTransition()
-{
-	UWorld* World = GetWorld();
-
-	const bool bGameWon = true; // TODO
-	if (bGameWon)
-	{
-		MyGameInstance->AdvancePlayer1ToNextLevel();
-		UGameplayStatics::OpenLevelBySoftObjectPtr(World, GamePlayLevel, true);
-	}
-	else
-	{
-		MyGameInstance->ResetPlayer1CurrentLevel();
-		MyGameInstance->ResetPlayer1CurrentScore();
-		UGameplayStatics::OpenLevelBySoftObjectPtr(World, MainMenuLevel, true);
-	}
-}
-
 void AASIGameModeBase::SpawnPawn()
 {
 	UWorld* World = GetWorld();
@@ -138,6 +93,7 @@ void AASIGameModeBase::SpawnPawn()
 	FRotator SpawnRotation = PlayerSpawner->GetActorRotation();
 
 	MyPawn = World->SpawnActor<AASIPlayerPawn>(PlayerPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
+	MyPawn->OnPlayerPawnKilled.AddDynamic(this, &ThisClass::OnPlayerPawnDestroyed);
 
 	MyPlayerController->Possess(MyPawn);
 }
@@ -218,4 +174,122 @@ void AASIGameModeBase::OnUFODestroyed(AActor* DestroyerActor)
 	
 	// CalculateUFORandomScore();
 	SetUFORespawnTimer();
+}
+
+// NOTE: Called from the Pawn when it is killed from enemy shots only!
+void AASIGameModeBase::OnPlayerPawnDestroyed()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnPlayerPawnDestroyed"));
+
+	MyGameState->ReducePlayer1Lives();
+
+	const int32 PlayerLives = MyGameState->GetPlayer1Lives();
+
+	UE_LOG(LogTemp, Warning, TEXT("Player Lives: %d"), PlayerLives);
+
+	if (PlayerLives <= 0)
+	{
+		GameOver(EGameOverType::GameLost);
+	}
+	else
+	{
+		if (OnGamePaused.IsBound())
+		{
+			OnGamePaused.Broadcast(true);
+		}
+
+		GetWorld()->GetTimerManager().SetTimer(
+			PlayerPawnSpawnTimerHandle,			// handle to cancel timer at a later time
+			this,								// the owning object
+			&ThisClass::ReSpawnPlayerPawn,		// function to call on elapsed
+			PlayerPawnSpawnDelay,				// float delay until elapsed
+			false);								// looping?
+	}
+}
+
+void AASIGameModeBase::ReSpawnPlayerPawn()
+{
+	if (IsValid(UFO))
+	{
+		UFO->HandleDestruction(this);
+	}
+
+	SpawnPawn();
+
+	if (OnGamePaused.IsBound())
+	{
+		OnGamePaused.Broadcast(false);
+	}
+}
+
+void AASIGameModeBase::OnInvadersReachedPlayerRow()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnInvadersReachedPlayerRow"));
+
+	// Rule based on the Original Game
+	MyPawn->HandleDestruction(this);
+
+	GameOver(EGameOverType::GameLost);
+}
+
+void AASIGameModeBase::GameOver(const EGameOverType GameOverType)
+{
+	CurrentGameOverType = GameOverType;
+	
+	if (OnGamePaused.IsBound())
+	{
+		OnGamePaused.Broadcast(true);
+	}
+
+	UWorld* World = GetWorld();
+	const bool bGameWon = (CurrentGameOverType == EGameOverType::GameWon) ? true : false;
+
+	// TODO: Sound
+	//LevelAmbientSound->Stop();
+	//UGameplayStatics::PlaySound2D(World, PlayerFaction == LoserFaction ? DefeatSound : VictorySound);
+
+	MyGameInstance->SetPlayer1CurrentScore(MyGameState->GetPlayer1Score());
+	MyGameInstance->SetPlayer1HiScore(MyGameState->GetPlayer1Score());
+
+
+	// TODO: UI WIDGETS
+	//if (bGameWon)
+	//{
+	//	HUD->ShowVictoryWidgets();
+	//}
+	//else
+	//{
+	//	HUD->ShowDefeatWidgets();
+	//}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		LevelTransitionTimerHandle,		// handle to cancel timer at a later time
+		this,							// the owning object
+		&ThisClass::LevelTransition,	// function to call on elapsed
+		LevelTransitionDelayTime,		// float delay until elapsed
+		false);							// looping?
+}
+
+void AASIGameModeBase::LevelTransition()
+{
+	UWorld* World = GetWorld();
+	const bool bGameWon = (CurrentGameOverType == EGameOverType::GameWon) ? true : false;
+
+	if (bGameWon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Game Won -> Next Level"));
+
+		MyGameInstance->AdvancePlayer1ToNextLevel();
+
+		UGameplayStatics::OpenLevelBySoftObjectPtr(World, GamePlayLevel, true);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Game Over -> Main Menu"));
+
+		MyGameInstance->ResetPlayer1CurrentLevel();
+		MyGameInstance->ResetPlayer1CurrentScore();
+		
+		UGameplayStatics::OpenLevelBySoftObjectPtr(World, MainMenuLevel, true);
+	}
 }
