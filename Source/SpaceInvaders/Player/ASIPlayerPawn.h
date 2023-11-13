@@ -29,6 +29,8 @@ public:
 	virtual void Tick(float DeltaTime) override final;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
 
+	void HandleDestruction(AActor* Destroyer);
+
 protected:
 	virtual void BeginPlay() override final;
 
@@ -54,9 +56,6 @@ private:
 
 private:
 	// Components
-	//UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	//TObjectPtr<USceneComponent> SceneComp = nullptr;
-
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UStaticMeshComponent> StaticMeshComp = nullptr;
 

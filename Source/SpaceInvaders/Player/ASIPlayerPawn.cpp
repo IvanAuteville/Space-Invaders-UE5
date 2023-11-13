@@ -21,6 +21,7 @@
 #include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
 #include "SpaceInvaders/Player/ASIPlayerController.h"
 #include "SpaceInvaders/Utils/InputUtils.h"
+#include "SpaceInvaders/GameModes/ASIGameModeBase.h" // TODO: delete -> replace with Callbacks/Delegates
 
 AASIPlayerPawn::AASIPlayerPawn()
 {
@@ -37,7 +38,7 @@ AASIPlayerPawn::AASIPlayerPawn()
 	// Custom Preset
 	// Collision Enabled (Query Only)
 	// Object Type: Pawn
-	// Ignore everything, Block WorldStatic
+	// Ignore everything, Block WorldStatic and WorldDynamic (Invaders)
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ProjectileSpawnPoint"));
 	ProjectileSpawnPoint->SetupAttachment(StaticMeshComp);
@@ -143,15 +144,7 @@ void AASIPlayerPawn::FireInputTriggered(const FInputActionValue& Value)
 	if (Value.GetValueType() != EInputActionValueType::Boolean)
 		return;
 
-	if(!bProjectileAvailable)
-		return;
-	
-	Projectile->SetActorLocationAndRotation(ProjectileSpawnPoint->GetComponentLocation(),
-		ProjectileSpawnPoint->GetComponentRotation(), false, nullptr, ETeleportType::TeleportPhysics);
-	
-	Projectile->Fire();
-
-	bProjectileAvailable = false;
+	Fire();
 }
 
 void AASIPlayerPawn::ActivatePowerUpInputTriggered(const FInputActionValue& Value)
@@ -170,13 +163,15 @@ void AASIPlayerPawn::Move(float DeltaTime)
 
 void AASIPlayerPawn::Fire()
 {
-	//if (!InputEnabled())
-	//	return;
+	if (!bProjectileAvailable)
+		return;
 
-	//AASIBaseProjectile* Projectile = GetWorld()->SpawnActor<AASIBaseProjectile>(ProjectileClass,
-	//	ProjectileSpawnPoint->GetComponentLocation(),
-	//	ProjectileSpawnPoint->GetComponentRotation());
-	//Projectile->SetOwner(this);
+	Projectile->SetActorLocationAndRotation(ProjectileSpawnPoint->GetComponentLocation(),
+		ProjectileSpawnPoint->GetComponentRotation(), false, nullptr, ETeleportType::TeleportPhysics);
+
+	Projectile->Fire();
+
+	bProjectileAvailable = false;
 }
 
 void AASIPlayerPawn::ActivatePowerUp()
@@ -184,9 +179,27 @@ void AASIPlayerPawn::ActivatePowerUp()
 
 }
 
-void AASIPlayerPawn::HandleDestruction()
+void AASIPlayerPawn::HandleDestruction(AActor* Destroyer)
 {
+	// TODO: VFXs
 	//UGameplayStatics::SpawnEmitterAtLocation(this, DeathParticles, GetActorLocation(), GetActorRotation());
+	// TODO: Sounds
 	//UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
-	//GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(DeathCameraShakeClass);
+
+	// TODO: check
+	//if (Destroyer == nullptr)
+	//	return;
+
+	//AASIPlayerPawn* PlayerPawn = Cast<AASIPlayerPawn>(Destroyer);
+	//if (!IsValid(PlayerPawn))
+	//	return;
+
+	// TODO: Delegate Call
+
+	// TEST ONLY
+	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	MyGameMode->GameOver();
+	//---
+
+	Destroy(false, true);
 }
