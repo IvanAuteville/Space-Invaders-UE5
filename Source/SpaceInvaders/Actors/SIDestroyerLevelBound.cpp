@@ -3,6 +3,7 @@
 
 #include "SIDestroyerLevelBound.h"
 #include "Components/StaticMeshComponent.h"
+#include "SpaceInvaders/Enemies/ASIUFOActor.h"
 
 ASIDestroyerLevelBound::ASIDestroyerLevelBound()
 {
@@ -37,12 +38,19 @@ void ASIDestroyerLevelBound::OnHit(UPrimitiveComponent* HitComp, AActor* OtherAc
 	if (OtherActor == nullptr || OtherActor == this)
 		return;
 
-	// TODO: do something with OtherActor
-	UE_LOG(LogTemp, Warning, TEXT("Destroyer Level Bound collisioned with %s"), *OtherActor->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("Destroyer Level Bound collisioned with %s"), *OtherActor->GetName());
 
 	// NOTE: it would be a better practice to handle this through a Destructible Interface, 
 	// but I'm running low on time and this is a very specific case for the UFO
 	// (when reaching level lateral bounds)
-	OtherActor->Destroy();
+	AASIUFOActor* UFOActor = Cast<AASIUFOActor>(OtherActor);
+	if (IsValid(UFOActor))
+	{
+		UFOActor->HandleDestruction(this);
+	}
+	else
+	{
+		OtherActor->Destroy();
+	}
 }
 

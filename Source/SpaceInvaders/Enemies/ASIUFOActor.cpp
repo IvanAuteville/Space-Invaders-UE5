@@ -36,13 +36,18 @@ void AASIUFOActor::SetHorizontalMovementDirection(const EHorizontalMovementType 
 	HorizontalMovementType = MovementDirection;
 }
 
-void AASIUFOActor::HandleDestruction()
+void AASIUFOActor::HandleDestruction(AActor* Destroyer)
 {
 	// TODO: VFX
 	//UGameplayStatics::SpawnEmitterAtLocation(this, DeathParticles, GetActorLocation(), GetActorRotation());
 	
 	// TODO: Sound
 	//UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
+	
+	if (OnUFODestroyed.IsBound())
+	{
+		OnUFODestroyed.Broadcast(Destroyer);
+	}
 
 	Destroy();
 }
@@ -68,10 +73,10 @@ void AASIUFOActor::Tick(float DeltaTime)
 	Move(DeltaTime);
 }
 
-void AASIUFOActor::Move(float DeltaTime)
+void AASIUFOActor::Move(const float DeltaTime)
 {
 	const float Direction = (HorizontalMovementType == EHorizontalMovementType::Right) ? 1.0f : -1.0f;
-	FVector LocalOffset(Direction * MovementSpeed * DeltaTime, 0.0, 0.0);
+	FVector LocalOffset(Direction * BaseMovementSpeed * DeltaTime, 0.0, 0.0);
 	AddActorLocalOffset(LocalOffset, true);
 }
 

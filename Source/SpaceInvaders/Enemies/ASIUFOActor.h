@@ -10,7 +10,7 @@
 class UStaticMeshComponent;
 class UAudioComponent;
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUFODestroyedByPlayer);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUFODestroyed, AActor*, Destroyer);
 
 UCLASS(meta = (PrioritizeCategories = "UFOSettings UFOInstance Components"))
 class SPACEINVADERS_API AASIUFOActor : public AActor
@@ -20,13 +20,15 @@ class SPACEINVADERS_API AASIUFOActor : public AActor
 public:	
 	AASIUFOActor();
 	void Tick(float DeltaTime) override final;
+
 	void SetHorizontalMovementDirection(const EHorizontalMovementType MovementDirection);
 
-	void HandleDestruction();
-//public:
-//	// Delegates
-//	UPROPERTY(BlueprintAssignable)
-//	FOnUFODestroyedByPlayer OnUFODestroyedByPlayer;
+	void HandleDestruction(AActor* Destroyer);
+
+public:
+	// Delegates
+	UPROPERTY(BlueprintAssignable)
+	FOnUFODestroyed OnUFODestroyed;
 
 protected:
 	void BeginPlay() override final;
@@ -36,7 +38,7 @@ private:
 	//void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	//		FVector NormalImpulse, const FHitResult& Hit);
 
-	void Move(float DeltaTime);
+	void Move(const float DeltaTime);
 
 private:
 	UPROPERTY(Category = "Components", VisibleAnywhere, meta = (AllowPrivateAccess = true))
@@ -45,11 +47,11 @@ private:
 	UPROPERTY(Category = "Components", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UAudioComponent> AudioComp = nullptr;
 
-	UPROPERTY(Category = "UFOSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
-	float MovementSpeed = 200.0f;
-
 	UPROPERTY(Category = "UFOInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	EHorizontalMovementType HorizontalMovementType = EHorizontalMovementType::None;
+
+	UPROPERTY(Category = "UFOInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	float BaseMovementSpeed = 200.0f;
 
 	UPROPERTY(Category = "UFOInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	bool bEnabled = false;

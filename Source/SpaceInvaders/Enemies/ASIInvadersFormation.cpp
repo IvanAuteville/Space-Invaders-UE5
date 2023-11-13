@@ -6,6 +6,8 @@
 #include "SpaceInvaders/Enemies/ASIInvaderActor.h"
 #include "Engine/TimerHandle.h"
 
+//#define UE_LOG_ENABLED
+
 AASIInvadersFormation::AASIInvadersFormation()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -93,7 +95,9 @@ void AASIInvadersFormation::LateralBoundReached(const AActor* BoundActorCollided
 	HorizontalMovementType = (HorizontalMovementType == EHorizontalMovementType::Right) ? 
 	EHorizontalMovementType::Left : EHorizontalMovementType::Right;
 
+#ifdef UE_LOG_ENABLED
 	UE_LOG(LogTemp, Warning, TEXT("LateralBoundReached!"));
+#endif // UE_LOG_ENABLED
 
 	InvadersFormationAxisMovement = EInvadersFormationAxisMovement::Vertical;
 }
@@ -174,11 +178,13 @@ bool AASIInvadersFormation::IsDestinationRowReached() const
 {
 	const double CurrentActorY = GetActorLocation().Y;
 
+#ifdef UE_LOG_ENABLED
 	UE_LOG(LogTemp, Warning, TEXT("-----------------------------"));
 	UE_LOG(LogTemp, Warning, TEXT("CHECK: CurrentActorY [%.2f]"), CurrentActorY);
 	UE_LOG(LogTemp, Warning, TEXT("CHECK: DestinationRowY [%.2f]"), CurrentRowY);
 	UE_LOG(LogTemp, Warning, TEXT("CHECK: DestinationRowY [%.2f]"), DestinationRowY);
 	UE_LOG(LogTemp, Warning, TEXT("-----------------------------"));
+#endif // UE_LOG_ENABLED
 
 	if (FMath::IsNearlyEqual(CurrentActorY, DestinationRowY, UE_KINDA_SMALL_NUMBER))
 		return true;
@@ -195,7 +201,9 @@ void AASIInvadersFormation::UpdateCurrentRow()
 {
 	CurrentRowY = GetActorLocation().Y;
 
+#ifdef UE_LOG_ENABLED
 	UE_LOG(LogTemp, Warning, TEXT("UPDATE: CurrentRowY [%.2f]"), CurrentRowY);
+#endif // UE_LOG_ENABLED
 }
 
 void AASIInvadersFormation::UpdateDestinationRow()
@@ -204,5 +212,7 @@ void AASIInvadersFormation::UpdateDestinationRow()
 	double RowSpacing = FormationData->InvadersSpacing.Y * RowDir;
 	DestinationRowY = CurrentRowY + FormationData->InvadersSpacing.Y;
 
+#ifdef UE_LOG_ENABLED
 	UE_LOG(LogTemp, Warning, TEXT("UPDATE: DestinationRowY [%.2f]"), DestinationRowY);
+#endif // UE_LOG_ENABLED
 }
