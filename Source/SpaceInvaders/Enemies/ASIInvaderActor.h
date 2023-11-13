@@ -22,11 +22,14 @@ public:
 	void SetFormation(AASIInvadersFormation* Formation);
 	void Move(const FVector& DeltaLocation);
 	void LateralBoundReached(const AActor* BoundActorCollidedWith);
-//protected:
-//	virtual void BeginPlay() override;
-//
-//public:	
-//	virtual void Tick(float DeltaTime) override;
+
+protected:
+	void BeginPlay() override final;
+
+private:
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+			FVector NormalImpulse, const FHitResult& Hit);
 
 private:
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
