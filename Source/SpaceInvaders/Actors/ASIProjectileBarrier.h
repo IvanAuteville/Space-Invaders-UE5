@@ -17,12 +17,6 @@ class SPACEINVADERS_API AASIProjectileBarrier : public AActor
 public:	
 	AASIProjectileBarrier();
 
-//protected:
-//	virtual void BeginPlay() override;
-//
-//public:	
-//	virtual void Tick(float DeltaTime) override;
-
 private:
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> SceneComp = nullptr;

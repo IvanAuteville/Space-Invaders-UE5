@@ -28,15 +28,3 @@ AASIPlayerBoundActor::AASIPlayerBoundActor()
 	// Ignore everything, Block Pawn
 }
 
-//void AASIPlayerBoundActor::BeginPlay()
-//{
-//	Super::BeginPlay();
-//	
-//}
-
-//void AASIPlayerBoundActor::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//
-//}
-

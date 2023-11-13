@@ -22,15 +22,3 @@ AASIProjectileBarrier::AASIProjectileBarrier()
 	StaticMeshComp->SetNotifyRigidBodyCollision(true);
 }
 
-//void AASIProjectileBarrier::BeginPlay()
-//{
-//	Super::BeginPlay();
-//	
-//}
-
-//void AASIProjectileBarrier::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//
-//}
-
