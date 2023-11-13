@@ -17,6 +17,7 @@ class ASISpawnLocationBase;
 class AASIUFOActor;
 class AASIInvaderActor;
 class AASIInvadersFormation;
+class USIFormationDataAsset;
 
 struct FTimerHandle;
 
@@ -25,6 +26,10 @@ class SPACEINVADERS_API AASIGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
+public:
+	void GameOver(); // TODO: delete
+
+
 protected:
 	void BeginPlay() override final;
 	void EndPlay(const EEndPlayReason::Type EndPlayReason) override final;
@@ -32,13 +37,16 @@ protected:
 private:
 	void SetReferences();
 	void GameStart();
-	void GameOver();
+	// void GameOver(); // TODO: restore
+	void LevelTransition();
 
 	void SpawnPawn();
 	void SpawnUFO();
 	void SpawnInvadersFormation();
 
 	float CalculateUFORandomSpawnTime() const;
+	int32 CalculateUFORandomScore() const;
+
 	void SetUFORespawnTimer();
 
 	UFUNCTION()
@@ -107,14 +115,19 @@ private:
 	AASIHUD* MyHUD = nullptr;
 
 	// Timers
-
-	/* Pawn Spawn Timer */
+	UPROPERTY(Category = "Timers", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	FTimerHandle PlayerPawnSpawnTimerHandle;
 
-	UPROPERTY(Category = "Spawners", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(Category = "Timers", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	float PlayerPawnSpawnDelay = 4.0f;
 
-	/* UFO Spawn Timer */
+	UPROPERTY(Category = "Timers", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	FTimerHandle LevelTransitionTimerHandle;
+
+	UPROPERTY(Category = "Timers", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float LevelTransitionDelayTime = 5.0f;
+
+	UPROPERTY(Category = "Timers", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	FTimerHandle UFOSpawnTimerHandle;
 
 	// UFOSettings
@@ -132,7 +145,10 @@ private:
 	TMap<TSubclassOf<AASIInvaderActor>, int32> ScorePerInvader;
 
 	UPROPERTY(Category = "ScoreSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
-	int32 UFOScore = 100;
+	int32 UFOMinScore = 50;
+
+	UPROPERTY(Category = "ScoreSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	int32 UFOMaxScore = 300;
 
 	// GameSettings
 	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
@@ -140,4 +156,16 @@ private:
 
 	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	int32 InitialPowerUpLevel = 0;
+
+	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	int32 MaxLevel = 4;
+
+	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TObjectPtr<USIFormationDataAsset> FormationData = nullptr;
+	
+	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	const TSoftObjectPtr<UWorld> GamePlayLevel = nullptr;
+
+	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	const TSoftObjectPtr<UWorld> MainMenuLevel = nullptr;
 };

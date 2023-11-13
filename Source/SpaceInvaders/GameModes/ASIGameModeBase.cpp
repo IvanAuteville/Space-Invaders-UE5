@@ -16,6 +16,7 @@
 #include "SpaceInvaders/GameStates/ASIGameStateBase.h"
 #include "SpaceInvaders/GameInstances/USIGameInstance.h"
 #include "SpaceInvaders/HUDs/ASIHUD.h"
+#include "SpaceInvaders/Enemies/SIFormationDataAsset.h"
 
 // TODO: Move to Utils
 namespace GameModeUtils
@@ -78,18 +79,52 @@ void AASIGameModeBase::GameStart()
 
 void AASIGameModeBase::GameOver()
 {
+	const bool bGameWon = true; // TODO
+
+	UWorld* World = GetWorld();
+
 	// TODO: Sound
 	//LevelAmbientSound->Stop();
-	//UGameplayStatics::PlaySound2D(GetWorld(), PlayerFaction == LoserFaction ? DefeatSound : VictorySound);
+	//UGameplayStatics::PlaySound2D(World, PlayerFaction == LoserFaction ? DefeatSound : VictorySound);
 
-	//if (PlayerFaction != LoserFaction)
+	MyGameInstance->SetPlayer1CurrentScore(MyGameState->GetPlayer1Score());
+	MyGameInstance->SetPlayer1HiScore(MyGameState->GetPlayer1Score());
+
+
+	// TODO: UI WIDGETS
+	//if (bGameWon)
 	//{
-	//	HUD->ShowCombatVictoryMenu();
+	//	HUD->ShowVictoryWidgets();
 	//}
 	//else
 	//{
-	//	HUD->ShowCombatDefeatMenu();
+	//	HUD->ShowDefeatWidgets();
 	//}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		LevelTransitionTimerHandle,		// handle to cancel timer at a later time
+		this,							// the owning object
+		&ThisClass::LevelTransition,	// function to call on elapsed
+		LevelTransitionDelayTime,		// float delay until elapsed
+		false);							// looping?
+}
+
+void AASIGameModeBase::LevelTransition()
+{
+	UWorld* World = GetWorld();
+
+	const bool bGameWon = true; // TODO
+	if (bGameWon)
+	{
+		MyGameInstance->AdvancePlayer1ToNextLevel();
+		UGameplayStatics::OpenLevelBySoftObjectPtr(World, GamePlayLevel, true);
+	}
+	else
+	{
+		MyGameInstance->ResetPlayer1CurrentLevel();
+		MyGameInstance->ResetPlayer1CurrentScore();
+		UGameplayStatics::OpenLevelBySoftObjectPtr(World, MainMenuLevel, true);
+	}
 }
 
 void AASIGameModeBase::SpawnPawn()
@@ -140,7 +175,14 @@ void AASIGameModeBase::SpawnInvadersFormation()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	FVector SpawnLocation = InvadersSpawner->GetActorLocation();
+	// Apply Level Offset
+	int32 CurrentLevel = 0;
+	CurrentLevel = FMath::Clamp(CurrentLevel, MyGameInstance->GetPlayer1CurrentLevel(), MaxLevel);
+
+	const double OffsetYPerLevel = FormationData->InvadersSpacing.Y;
+	const FVector SpawnLocationLevelOffset = FVector(0.0, CurrentLevel * OffsetYPerLevel, 0.0);
+
+	FVector SpawnLocation = InvadersSpawner->GetActorLocation() + SpawnLocationLevelOffset;
 	FRotator SpawnRotation = InvadersSpawner->GetActorRotation();
 
 	InvadersFormation = World->SpawnActor<AASIInvadersFormation>(InvadersFormationClass, SpawnLocation, SpawnRotation, SpawnParams);
@@ -151,6 +193,12 @@ float AASIGameModeBase::CalculateUFORandomSpawnTime() const
 	const float RandomDelay = FMath::FRandRange(UFOMinSpawnTime, UFOMaxSpawnTime);
 	const float SpawnTime = UFOInitialDelayTime + RandomDelay;
 	return SpawnTime;
+}
+
+int32 AASIGameModeBase::CalculateUFORandomScore() const
+{
+	const int32 UFORandomScore = FMath::RandRange(UFOMinScore, UFOMaxScore);
+	return UFORandomScore;
 }
 
 void AASIGameModeBase::SetUFORespawnTimer()
@@ -166,8 +214,8 @@ void AASIGameModeBase::SetUFORespawnTimer()
 
 void AASIGameModeBase::OnUFODestroyed(AActor* DestroyerActor)
 {
-	// Score if Killed by player
-	// GameState
-
+	// Score if Killed by player -> GameState
+	
+	// CalculateUFORandomScore();
 	SetUFORespawnTimer();
 }
