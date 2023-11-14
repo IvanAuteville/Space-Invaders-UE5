@@ -73,6 +73,12 @@ private:
 
 	UFUNCTION()
 	void OnInvadersReachedPlayerRow();
+	
+	UFUNCTION()
+	void OnInvaderKilled(AASIInvaderActor* Invader);
+
+	UFUNCTION()
+	void OnInvadersDefeated();
 
 private:
 	// Spawners

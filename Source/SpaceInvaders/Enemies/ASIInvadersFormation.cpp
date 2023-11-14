@@ -26,8 +26,6 @@ void AASIInvadersFormation::BeginPlay()
 
 	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(this));
 	MyGameMode->OnGamePaused.AddDynamic(this, &ThisClass::OnGamePaused);
-	// TODO: unnecessary I think
-	// MyGameMode->OnPawnRespawned.AddDynamic(this, &ThisClass::OnGamePaused);
 
 	UpdateCurrentRow();
 	UpdateDestinationRow();
@@ -170,8 +168,14 @@ void AASIInvadersFormation::Move(const float DeltaTime)
 
 	const FVector LocalOffset(HorizontalSpeed * CalculatedMovementSpeed, VerticalSpeed * CalculatedMovementSpeed, 0.0);
 	
-	for (AASIInvaderActor* Invader : Invaders)
-	{	
+
+	for (auto It = Invaders.CreateIterator(); It; ++It)
+	{
+		// An Invader was killed during iteration!
+		if (!It)
+			continue;
+
+		AASIInvaderActor* Invader = *It;
 		Invader->Move(LocalOffset);
 	}
 
@@ -229,4 +233,42 @@ void AASIInvadersFormation::UpdateDestinationRow()
 #ifdef UE_LOG_ENABLED
 	UE_LOG(LogTemp, Warning, TEXT("UPDATE: DestinationRowY [%.2f]"), DestinationRowY);
 #endif // UE_LOG_ENABLED
+}
+
+void AASIInvadersFormation::InvaderDestroyed(AASIInvaderActor* Invader)
+{
+	Invaders.Remove(Invader);
+	UpdateFormationGridOnInvaderDestroyed(Invader);
+
+	if (OnInvaderKilled.IsBound())
+	{
+		OnInvaderKilled.Broadcast(Invader);
+	}
+
+	if (Invaders.IsEmpty() && OnInvadersDefeated.IsBound())
+	{
+		OnInvadersDefeated.Broadcast();
+	}
+}
+
+void AASIInvadersFormation::UpdateFormationGridOnInvaderDestroyed(AASIInvaderActor* Invader)
+{
+	auto FindInvaderFormationSlotByInvaderActor = [](const FInvaderFormationSlot& FormationSlot, const AASIInvaderActor* Invader)
+	{
+		return FormationSlot.Invader == Invader;
+	};
+
+	FInvaderFormationSlot* FoundSlot = FormationGrid.FindByPredicate([&](const FInvaderFormationSlot& Element)
+	{
+		return FindInvaderFormationSlotByInvaderActor(Element, Invader);
+	});
+
+	if (FoundSlot)
+	{
+		FoundSlot->Invader = nullptr;
+	}
+	else
+	{
+		checkNoEntry();
+	}
 }

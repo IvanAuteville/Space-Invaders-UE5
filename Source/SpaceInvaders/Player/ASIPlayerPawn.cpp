@@ -21,6 +21,7 @@
 #include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
 #include "SpaceInvaders/Player/ASIPlayerController.h"
 #include "SpaceInvaders/Utils/InputUtils.h"
+#include "SpaceInvaders/GameModes/ASIGameModeBase.h"
 
 AASIPlayerPawn::AASIPlayerPawn()
 {
@@ -56,6 +57,9 @@ void AASIPlayerPawn::BeginPlay()
 
 	PlayerController = Cast<AASIPlayerController>(GetController());
 	
+	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(this));
+	MyGameMode->OnGamePaused.AddDynamic(this, &ThisClass::OnGamePaused);
+
 	AddInputMapping();
 	SpawnProjectile();
 }
@@ -194,6 +198,11 @@ void AASIPlayerPawn::HandleDestruction(AActor* DestroyerActor)
 	{
 		OnPlayerPawnKilled.Broadcast();
 	}
-
+	
 	Destroy(false, true);
+}
+
+void AASIPlayerPawn::OnGamePaused(const bool bPaused)
+{
+	bMovementEnabled = !bPaused;
 }

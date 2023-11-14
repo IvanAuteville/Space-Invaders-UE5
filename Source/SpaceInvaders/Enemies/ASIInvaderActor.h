@@ -43,9 +43,7 @@ private:
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> ProjectileSpawnPoint = nullptr;
 
-	UPROPERTY(Category = "Components", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
-	TSubclassOf<AASIBaseProjectile> ProjectileClass = nullptr;
-
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	AASIInvadersFormation* MyFormation = nullptr;
+
 };

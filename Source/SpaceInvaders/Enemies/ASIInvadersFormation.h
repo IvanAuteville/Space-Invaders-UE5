@@ -8,13 +8,12 @@
 #include "SpaceInvaders/Enums/FormationThreatLevel.h"
 #include "SpaceInvaders/Enums/HorizontalMovementType.h"
 #include "SpaceInvaders/Enums/VerticalMovementType.h"
-// #include "SpaceInvaders/Enums/InvadersFormationState.h"
-
 #include "ASIInvadersFormation.generated.h"
 
 class USceneComponent;
 class USIFormationDataAsset;
 class AASIInvaderActor;
+class AASIBaseProjectile;
 
 struct FTimerHandle;
 
@@ -57,6 +56,9 @@ enum class EInvadersFormationAxisMovement : uint8
 	Vertical = 2		UMETA(DisplayName = "Vertical"),
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInvadersDefeated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInvaderKilled, AASIInvaderActor*, Invader);
+
 UCLASS()
 class SPACEINVADERS_API AASIInvadersFormation : public AActor
 {
@@ -68,6 +70,16 @@ public:
 	
 	void SpawnInvaders();
 	void LateralBoundReached(const AActor* BoundActorCollidedWith);
+
+	void InvaderDestroyed(AASIInvaderActor* Invader);
+
+public:
+	// Delegates
+	UPROPERTY()
+	FOnInvadersDefeated OnInvadersDefeated;
+
+	UPROPERTY()
+	FOnInvaderKilled OnInvaderKilled;
 
 protected:
 	void BeginPlay() override final;
@@ -89,12 +101,17 @@ private:
 	void UpdateCurrentRow();
 	void UpdateDestinationRow();
 
+	void UpdateFormationGridOnInvaderDestroyed(AASIInvaderActor* Invader);
+
 private:
 	UPROPERTY(Category = "Component", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> FormationLeftRightCornerLocation = nullptr;
 
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USIFormationDataAsset> FormationData = nullptr;
+
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TSubclassOf<AASIBaseProjectile> ProjectileClass = nullptr;
 
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	float SpawnSequenceDelayTime = 5.0f;
@@ -145,4 +162,5 @@ private:
 	/* Handle to manage the Sequence timer */
 	FTimerHandle InvadersSpawnSequenceTimerHandle;
 	int32 InvaderSequenceIndex = -1;
+
 };

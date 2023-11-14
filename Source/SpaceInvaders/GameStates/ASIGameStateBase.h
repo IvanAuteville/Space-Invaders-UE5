@@ -18,6 +18,7 @@ public:
 
 	int32 GetPlayer1Score() const { return Player1Score; }
 	void SetPlayer1Score(const int32 Score) { Player1Score = Score; }
+	void AddPlayer1Score(const int32 Score) { Player1Score += Score; }
 
 	int32 GetPowerUpLevel() const { return PowerUpLevel; }
 	void SetPowerUpLevel(const int32 Level) { PowerUpLevel = Level; }

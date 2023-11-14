@@ -33,6 +33,7 @@ public:
 	void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override final;
 
 	/** Start IDestructible Interface **/
+	UFUNCTION(BlueprintCallable) // TODO: delete, using it for testing from BPs
 	void HandleDestruction(AActor* DestroyerActor) override final;
 	/** End IDestructible Interface **/
 
@@ -50,6 +51,8 @@ private:
 
 	UFUNCTION()
 	void OnProjectileHit();
+	UFUNCTION()
+	void OnGamePaused(const bool bPaused);
 
 	UFUNCTION()
 	void MoveInputTriggered(const FInputActionValue& Value);
@@ -81,9 +84,6 @@ private:
 
 	//UPROPERTY(Category = "CameraPawnVFXs", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	//TObjectPtr<UNiagaraSystem> MoveOrderCursorEffect = nullptr;
-
-	//UPROPERTY(Category = "CameraPawnVFXs", EditAnywhere, meta = (AllowPrivateAccess = true))
-	//FVector MoveOrderCursorEffectScale = FVector(1.0);
 	
 	// TODO: Sounds
 	//UPROPERTY(EditAnywhere, Category = "Pawn Variables")
@@ -112,8 +112,12 @@ private:
 	UPROPERTY(Category = "PlayerPawnInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	float CachedMovementInputValue = 0.0f;
 
-	AASIPlayerController* PlayerController = nullptr;
-	AASIBaseProjectile* Projectile = nullptr;
+	UPROPERTY(Category = "PlayerPawnInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TObjectPtr<AASIBaseProjectile> Projectile = nullptr;
 
+	UPROPERTY(Category = "PlayerPawnInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	AASIPlayerController* PlayerController = nullptr;
+
+	UPROPERTY(Category = "PlayerPawnInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	bool bProjectileAvailable = false;
 };

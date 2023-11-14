@@ -18,6 +18,8 @@
 #include "SpaceInvaders/HUDs/ASIHUD.h"
 #include "SpaceInvaders/Enemies/SIFormationDataAsset.h"
 #include "SpaceInvaders/Actors/SIInvadersGameOverBound.h"
+#include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
+#include "SpaceInvaders/Enemies/ASIInvaderActor.h"
 
 // TODO: Move to Utils
 namespace GameModeUtils
@@ -70,6 +72,10 @@ void AASIGameModeBase::SetReferences()
 
 void AASIGameModeBase::GameStart()
 {
+	MyGameState->SetPlayer1Lives(InitialPlayerLives);
+	MyGameState->SetPlayer1Score(MyGameInstance->GetPlayer1CurrentScore());
+	MyGameState->SetPowerUpLevel(InitialPowerUpLevel);
+
 	SpawnInvadersFormation();
 
 	GetWorld()->GetTimerManager().SetTimer(
@@ -132,8 +138,10 @@ void AASIGameModeBase::SpawnInvadersFormation()
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	// Apply Level Offset
-	int32 CurrentLevel = 0;
-	CurrentLevel = FMath::Clamp(CurrentLevel, MyGameInstance->GetPlayer1CurrentLevel(), MaxLevel);
+	UE_LOG(LogTemp, Warning, TEXT("Player 1 Level: %d"), MyGameInstance->GetPlayer1CurrentLevel());
+
+	int32 CurrentLevel = MyGameInstance->GetPlayer1CurrentLevel();
+	CurrentLevel = FMath::Clamp(CurrentLevel, 0, MaxLevel);
 
 	const double OffsetYPerLevel = FormationData->InvadersSpacing.Y;
 	const FVector SpawnLocationLevelOffset = FVector(0.0, CurrentLevel * OffsetYPerLevel, 0.0);
@@ -142,6 +150,8 @@ void AASIGameModeBase::SpawnInvadersFormation()
 	FRotator SpawnRotation = InvadersSpawner->GetActorRotation();
 
 	InvadersFormation = World->SpawnActor<AASIInvadersFormation>(InvadersFormationClass, SpawnLocation, SpawnRotation, SpawnParams);
+	InvadersFormation->OnInvadersDefeated.AddDynamic(this, &ThisClass::OnInvadersDefeated);
+	InvadersFormation->OnInvaderKilled.AddDynamic(this, &ThisClass::OnInvaderKilled);
 }
 
 float AASIGameModeBase::CalculateUFORandomSpawnTime() const
@@ -168,11 +178,18 @@ void AASIGameModeBase::SetUFORespawnTimer()
 		false);							// looping?
 }
 
+// TODO: UI ISSUE, maybe delay UFO destruction so we can get the position and Spawn a Label there with the Score
 void AASIGameModeBase::OnUFODestroyed(AActor* DestroyerActor)
 {
-	// Score if Killed by player -> GameState
-	
-	// CalculateUFORandomScore();
+	// Add Score if Killed by the Player
+	AASIBaseProjectile* Projectile = Cast<AASIBaseProjectile>(DestroyerActor);
+	if (Projectile)
+	{
+		const int32 UFOScore = CalculateUFORandomScore();
+		MyGameState->AddPlayer1Score(UFOScore);
+		UE_LOG(LogTemp, Warning, TEXT("UFO SCORE: %d"), UFOScore);
+	}
+
 	SetUFORespawnTimer();
 }
 
@@ -193,12 +210,19 @@ void AASIGameModeBase::OnPlayerPawnDestroyed()
 	}
 	else
 	{
+		UWorld* World = GetWorld();
+
 		if (OnGamePaused.IsBound())
 		{
 			OnGamePaused.Broadcast(true);
 		}
 
-		GetWorld()->GetTimerManager().SetTimer(
+		if (!IsValid(UFO))
+		{
+			World->GetTimerManager().ClearTimer(UFOSpawnTimerHandle);
+		}
+
+		World->GetTimerManager().SetTimer(
 			PlayerPawnSpawnTimerHandle,			// handle to cancel timer at a later time
 			this,								// the owning object
 			&ThisClass::ReSpawnPlayerPawn,		// function to call on elapsed
@@ -212,6 +236,10 @@ void AASIGameModeBase::ReSpawnPlayerPawn()
 	if (IsValid(UFO))
 	{
 		UFO->HandleDestruction(this);
+	}
+	else
+	{
+		SetUFORespawnTimer();
 	}
 
 	SpawnPawn();
@@ -230,6 +258,21 @@ void AASIGameModeBase::OnInvadersReachedPlayerRow()
 	MyPawn->HandleDestruction(this);
 
 	GameOver(EGameOverType::GameLost);
+}
+
+void AASIGameModeBase::OnInvaderKilled(AASIInvaderActor* Invader)
+{
+	const int32 InvaderScore = ScorePerInvader.FindRef(Invader->GetClass());
+	MyGameState->AddPlayer1Score(InvaderScore);
+
+	UE_LOG(LogTemp, Warning, TEXT("INVADER SCORE: %d"), InvaderScore);
+}
+
+void AASIGameModeBase::OnInvadersDefeated()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnInvadersDefeated"));
+
+	GameOver(EGameOverType::GameWon);
 }
 
 void AASIGameModeBase::GameOver(const EGameOverType GameOverType)
@@ -279,7 +322,10 @@ void AASIGameModeBase::LevelTransition()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Game Won -> Next Level"));
 
-		MyGameInstance->AdvancePlayer1ToNextLevel();
+		if (MyGameInstance->GetPlayer1CurrentLevel() < MaxLevel)
+		{
+			MyGameInstance->AdvancePlayer1ToNextLevel();
+		}
 
 		UGameplayStatics::OpenLevelBySoftObjectPtr(World, GamePlayLevel, true);
 	}

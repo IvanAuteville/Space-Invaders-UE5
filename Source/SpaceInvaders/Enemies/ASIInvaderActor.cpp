@@ -4,6 +4,7 @@
 #include "ASIInvaderActor.h"
 #include "SpaceInvaders/Enemies/ASIInvadersFormation.h"
 #include "SpaceInvaders/Player/ASIPlayerPawn.h"
+#include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
 
 AASIInvaderActor::AASIInvaderActor()
 {
@@ -34,7 +35,7 @@ void AASIInvaderActor::BeginPlay()
 	StaticMeshComp->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
 }
 
-// TODO: check if neccesary
+// TODO: check if neccesary / can be deleted
 void AASIInvaderActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -65,12 +66,8 @@ void AASIInvaderActor::HandleDestruction(AActor* DestroyerActor)
 	// TODO: Sounds
 	//UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
 
-	// TODO: Fire CallBack for GameMode (Score) and Formation (Update Amount of Invaders and Grid Composition)
-	//AASIBaseProjectile* ProjectileActor = Cast<AASIBaseProjectile>(DestroyerActor);
-	//if (IsValid(ProjectileActor) && OnPlayerPawnKilled.IsBound())
-	//{
-	//	OnPlayerPawnKilled.Broadcast();
-	//}
+	// Update Amount of Invaders and Grid Composition
+	MyFormation->InvaderDestroyed(this);
 
 	Destroy(false, true);
 }
