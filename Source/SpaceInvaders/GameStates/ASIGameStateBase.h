@@ -27,10 +27,10 @@ public:
 
 private:
 	UPROPERTY(Category = "Properties", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	int32 Player1Lives = -1;
+	int32 Player1Lives = 3;
 
 	UPROPERTY(Category = "Properties", VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	int32 Player1Score = -1;
+	int32 Player1Score = 0;
 
 	UPROPERTY(Category = "Properties", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	int32 PowerUpLevel = 0;
