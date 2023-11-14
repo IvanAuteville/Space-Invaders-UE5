@@ -29,6 +29,13 @@ enum class EGameOverType : uint8
 	GameLost = 2		UMETA(DisplayName = "GameLost"),
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnScoreUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHIScoreUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLivesUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPowerUpLevelUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameOver);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameWon);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePaused, bool, bPaused);
 
 UCLASS()
@@ -38,6 +45,25 @@ class SPACEINVADERS_API AASIGameModeBase : public AGameModeBase
 
 public:
 	// Delegates
+	UPROPERTY()
+	FOnScoreUpdated OnScoreUpdated;
+
+	UPROPERTY()
+	FOnHIScoreUpdated OnHIScoreUpdated;
+
+	UPROPERTY()
+	FOnLivesUpdated OnLivesUpdated;
+	
+	// TODO: not used yet
+	UPROPERTY()
+	FOnPowerUpLevelUpdated OnPowerUpLevelUpdated;
+
+	UPROPERTY()
+	FOnGameOver OnGameOver;
+
+	UPROPERTY()
+	FOnGameWon OnGameWon;
+
 	UPROPERTY()
 	FOnGamePaused OnGamePaused;
 

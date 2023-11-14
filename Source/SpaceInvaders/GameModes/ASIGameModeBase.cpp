@@ -74,7 +74,7 @@ void AASIGameModeBase::GameStart()
 {
 	MyGameState->SetPlayer1Lives(InitialPlayerLives);
 	MyGameState->SetPlayer1Score(MyGameInstance->GetPlayer1CurrentScore());
-	MyGameState->SetPowerUpLevel(InitialPowerUpLevel);
+	MyGameState->SetPlayer1PowerUpLevel(InitialPowerUpLevel);
 
 	SpawnInvadersFormation();
 
@@ -187,6 +187,11 @@ void AASIGameModeBase::OnUFODestroyed(AActor* DestroyerActor)
 	{
 		const int32 UFOScore = CalculateUFORandomScore();
 		MyGameState->AddPlayer1Score(UFOScore);
+		if (OnScoreUpdated.IsBound())
+		{
+			OnScoreUpdated.Broadcast();
+		}
+
 		UE_LOG(LogTemp, Warning, TEXT("UFO SCORE: %d"), UFOScore);
 	}
 
@@ -199,9 +204,12 @@ void AASIGameModeBase::OnPlayerPawnDestroyed()
 	UE_LOG(LogTemp, Warning, TEXT("OnPlayerPawnDestroyed"));
 
 	MyGameState->ReducePlayer1Lives();
+	if (OnLivesUpdated.IsBound())
+	{
+		OnLivesUpdated.Broadcast();
+	}
 
 	const int32 PlayerLives = MyGameState->GetPlayer1Lives();
-
 	UE_LOG(LogTemp, Warning, TEXT("Player Lives: %d"), PlayerLives);
 
 	if (PlayerLives <= 0)
@@ -265,6 +273,11 @@ void AASIGameModeBase::OnInvaderKilled(AASIInvaderActor* Invader)
 	const int32 InvaderScore = ScorePerInvader.FindRef(Invader->GetClass());
 	MyGameState->AddPlayer1Score(InvaderScore);
 
+	if (OnScoreUpdated.IsBound())
+	{
+		OnScoreUpdated.Broadcast();
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("INVADER SCORE: %d"), InvaderScore);
 }
 
@@ -285,25 +298,41 @@ void AASIGameModeBase::GameOver(const EGameOverType GameOverType)
 	}
 
 	UWorld* World = GetWorld();
+	World->GetTimerManager().ClearTimer(UFOSpawnTimerHandle);
 	const bool bGameWon = (CurrentGameOverType == EGameOverType::GameWon) ? true : false;
 
 	// TODO: Sound
 	//LevelAmbientSound->Stop();
-	//UGameplayStatics::PlaySound2D(World, PlayerFaction == LoserFaction ? DefeatSound : VictorySound);
+	//UGameplayStatics::PlaySound2D(World, bGameWon ? VictorySound : DefeatSound);
 
 	MyGameInstance->SetPlayer1CurrentScore(MyGameState->GetPlayer1Score());
 	MyGameInstance->SetPlayer1HiScore(MyGameState->GetPlayer1Score());
+	
+	// UI Callbacks
+	if (OnScoreUpdated.IsBound())
+	{
+		OnScoreUpdated.Broadcast();
+	}
+	
+	if (OnHIScoreUpdated.IsBound())
+	{
+		OnHIScoreUpdated.Broadcast();
+	}
 
-
-	// TODO: UI WIDGETS
-	//if (bGameWon)
-	//{
-	//	HUD->ShowVictoryWidgets();
-	//}
-	//else
-	//{
-	//	HUD->ShowDefeatWidgets();
-	//}
+	if (bGameWon)
+	{
+		if (OnGameWon.IsBound())
+		{
+			OnGameWon.Broadcast();
+		}
+	}
+	else
+	{
+		if (OnGameOver.IsBound())
+		{
+			OnGameOver.Broadcast();
+		}
+	}
 
 	GetWorld()->GetTimerManager().SetTimer(
 		LevelTransitionTimerHandle,		// handle to cancel timer at a later time

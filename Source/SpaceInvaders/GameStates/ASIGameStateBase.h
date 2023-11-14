@@ -20,8 +20,10 @@ public:
 	void SetPlayer1Score(const int32 Score) { Player1Score = Score; }
 	void AddPlayer1Score(const int32 Score) { Player1Score += Score; }
 
-	int32 GetPowerUpLevel() const { return PowerUpLevel; }
-	void SetPowerUpLevel(const int32 Level) { PowerUpLevel = Level; }
+	int32 GetPlayer1PowerUpLevel() const { return PowerUpLevel; }
+	void SetPlayer1PowerUpLevel(const int32 Level) { PowerUpLevel = Level; }
+	void AddPlayer1PowerUpLevel() { ++PowerUpLevel; }
+	void ResetPlayer1PowerUpLevel() { PowerUpLevel = 0; }
 
 private:
 	UPROPERTY(Category = "Properties", VisibleAnywhere, meta = (AllowPrivateAccess = true))
