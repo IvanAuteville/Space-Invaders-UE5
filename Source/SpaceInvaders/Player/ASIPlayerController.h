@@ -47,5 +47,8 @@ private:
 	UPROPERTY(Category = "PlayerControllerInputs", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UInputAction> PauseGameInputAction = nullptr;
 
+	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	const TSoftObjectPtr<UWorld> GamePlayLevel = nullptr;
+
 	bool bGamePaused = false; // TODO: check
 };

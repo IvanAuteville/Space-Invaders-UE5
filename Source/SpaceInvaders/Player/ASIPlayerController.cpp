@@ -8,9 +8,6 @@
 #include "InputActionValue.h"
 
 #include "Kismet/GameplayStatics.h"
-
-//#include "CombatSystem/Interfaces/Selectable.h"
-
 #include "SpaceInvaders/Utils/InputUtils.h"
 
 AASIPlayerController::AASIPlayerController()
@@ -22,10 +19,6 @@ AASIPlayerController::AASIPlayerController()
 
 	bEnableTouchEvents = false;
 	bEnableTouchOverEvents = false;
-
-	//DefaultMouseCursor = EMouseCursor::Hand;
-	//DefaultClickTraceChannel = ECollisionChannel::ECC_Visibility;
-	//HitResultTraceDistance = 1000000.f;
 	
 	bGamePaused = false;
 }
@@ -48,7 +41,6 @@ void AASIPlayerController::SetupInputComponent()
 void AASIPlayerController::BeginPlay()
 {
 	SetInputModeGameOnly();
-	// SetInputModeGameAndUI();
 	AddInputMapping();
 }
 
@@ -89,7 +81,13 @@ void AASIPlayerController::SelectInputTriggered(const FInputActionValue& Value)
 	if (Value.GetValueType() != EInputActionValueType::Boolean)
 		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Select Input Triggered!"));
+	const UWorld* CurrentWorld = GetWorld();
+	const UWorld* GameWorld = GamePlayLevel.Get();
+
+	if (CurrentWorld == GameWorld)
+		return;
+
+	UGameplayStatics::OpenLevelBySoftObjectPtr(CurrentWorld, GamePlayLevel, true);
 }
 
 void AASIPlayerController::PauseGameInputTriggered(const FInputActionValue& Value)

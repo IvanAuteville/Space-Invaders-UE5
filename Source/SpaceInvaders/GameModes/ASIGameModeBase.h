@@ -185,6 +185,9 @@ private:
 	int32 InitialPowerUpLevel = 0;
 
 	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float PowerUpTimeDuration = 3.0f;
+
+	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	int32 MaxLevel = 4;
 
 	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
@@ -195,4 +198,5 @@ private:
 
 	UPROPERTY(Category = "GameSettings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	const TSoftObjectPtr<UWorld> MainMenuLevel = nullptr;
+
 };
