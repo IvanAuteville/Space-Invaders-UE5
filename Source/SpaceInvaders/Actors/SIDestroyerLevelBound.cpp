@@ -40,6 +40,7 @@ void ASIDestroyerLevelBound::OnHit(UPrimitiveComponent* HitComp, AActor* OtherAc
 
 	//UE_LOG(LogTemp, Warning, TEXT("Destroyer Level Bound collisioned with %s"), *OtherActor->GetName());
 
+	// TODO: Interface Implemented, but short on time to change it!
 	// NOTE: it would be a better practice to handle this through a Destructible Interface, 
 	// but I'm running low on time and this is a very specific case for the UFO
 	// (when reaching level lateral bounds)

@@ -192,6 +192,8 @@ void AASIGameModeBase::OnUFODestroyed(AActor* DestroyerActor)
 			OnScoreUpdated.Broadcast();
 		}
 
+		UFO->SetRandomScore(UFOScore);
+
 		UE_LOG(LogTemp, Warning, TEXT("UFO SCORE: %d"), UFOScore);
 	}
 

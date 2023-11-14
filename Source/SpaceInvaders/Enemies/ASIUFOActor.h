@@ -10,6 +10,8 @@
 
 class UStaticMeshComponent;
 class UAudioComponent;
+class UWidgetComponent;
+class USIUFOScoreWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUFODestroyed, AActor*, Destroyer);
 
@@ -23,6 +25,7 @@ public:
 	void Tick(float DeltaTime) override final;
 
 	void SetHorizontalMovementDirection(const EHorizontalMovementType MovementDirection);
+	void SetRandomScore(const int32 UFOScore);
 
 	/** Start IDestructible Interface **/
 	void HandleDestruction(AActor* DestroyerActor) override final;
@@ -49,6 +52,9 @@ private:
 	UPROPERTY(Category = "Components", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UAudioComponent> AudioComp = nullptr;
 
+	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TObjectPtr<UWidgetComponent> WidgetComp = nullptr;
+
 	UPROPERTY(Category = "UFOInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	EHorizontalMovementType HorizontalMovementType = EHorizontalMovementType::None;
 
@@ -57,4 +63,8 @@ private:
 
 	UPROPERTY(Category = "UFOInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	bool bEnabled = true;
+		
+	UPROPERTY(Category = "UFOInstance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	USIUFOScoreWidget* ScoreWidget = nullptr;
+
 };

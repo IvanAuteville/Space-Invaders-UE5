@@ -5,8 +5,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "UMG/Public/Components/WidgetComponent.h"
 #include "SpaceInvaders/GameModes/ASIGameModeBase.h"
-
+#include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
+#include "SpaceInvaders/UI/SIUFOScoreWidget.h"
 
 AASIUFOActor::AASIUFOActor()
 {
@@ -31,6 +33,13 @@ AASIUFOActor::AASIUFOActor()
 	AudioComp->SetupAttachment(RootComponent);
 	AudioComp->SetVolumeMultiplier(1.0f);
 	AudioComp->SetPitchMultiplier(1.0f);
+
+	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
+	WidgetComp->SetupAttachment(GetRootComponent());
+	WidgetComp->SetWidgetSpace(EWidgetSpace::World);
+	WidgetComp->SetDrawAtDesiredSize(true);
+	WidgetComp->SetRelativeRotation(FRotator(0.0, 90.0, 90.0));
+	WidgetComp->SetPivot(FVector2D(0.5, 0.25));
 }
 
 void AASIUFOActor::BeginPlay()
@@ -39,6 +48,8 @@ void AASIUFOActor::BeginPlay()
 
 	AASIGameModeBase* MyGameMode = Cast<AASIGameModeBase>(UGameplayStatics::GetGameMode(this));
 	MyGameMode->OnGamePaused.AddDynamic(this, &ThisClass::OnGamePaused);
+
+	ScoreWidget = Cast<USIUFOScoreWidget>(WidgetComp->GetWidget());
 
 	AudioComp->Play();
 }
@@ -84,5 +95,26 @@ void AASIUFOActor::HandleDestruction(AActor* DestroyerActor)
 		OnUFODestroyed.Broadcast(DestroyerActor);
 	}
 
-	Destroy();
+	// Did the Player kill us?
+	AASIBaseProjectile* Projectile = Cast<AASIBaseProjectile>(DestroyerActor);
+	if (IsValid(Projectile))
+	{
+		bEnabled = false;
+
+		AudioComp->Stop();
+		StaticMeshComp->SetHiddenInGame(true);
+
+		ScoreWidget->SetVisibility(ESlateVisibility::Visible);
+		
+		SetLifeSpan(0.5f);
+	}
+	else
+	{
+		Destroy();
+	}
+}
+
+void AASIUFOActor::SetRandomScore(const int32 UFOScore)
+{
+	ScoreWidget->SetScore(UFOScore);
 }
