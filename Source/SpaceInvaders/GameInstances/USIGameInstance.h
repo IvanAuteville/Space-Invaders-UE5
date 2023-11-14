@@ -50,5 +50,12 @@ private:
 
 	UPROPERTY(Category = "Properties", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	int32 Player1CurrentLevel = 0;
+
+	// Save Game Properties
+	UPROPERTY(VisibleAnywhere)
+	FString SaveSlotName = FString("SISaveSlot");
+
+    UPROPERTY(VisibleAnywhere)
+    uint32 SaveUserIndex = 0;
 	
 };

@@ -2,6 +2,8 @@
 
 
 #include "USIGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "SpaceInvaders/SaveGame/SISaveGame.h"
 
 void UUSIGameInstance::Init()
 {
@@ -17,12 +19,28 @@ void UUSIGameInstance::Shutdown()
 
 bool UUSIGameInstance::LoadGameData()
 {
+    // Retrieve and cast the USaveGame object to USISaveGame.
+    if (USISaveGame* LoadedGame = Cast<USISaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, SaveUserIndex)))
+    {
+        // Retrieve data from the USISaveGame object.
+        Player1HiScore = LoadedGame->HIScore;
+        return true;
+    }
 
-	return true;
+	return false;
 }
 
 bool UUSIGameInstance::SaveGameData()
 {
+    if (USISaveGame* SaveGameInstance = Cast<USISaveGame>(UGameplayStatics::CreateSaveGameObject(USISaveGame::StaticClass())))
+    {
+        // Set data on the USISaveGame object.
+        SaveGameInstance->HIScore = Player1HiScore;
 
-	return true;
+        // Save the data immediately.
+        if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, SaveUserIndex))
+            return true;
+    }
+
+	return false;
 }
