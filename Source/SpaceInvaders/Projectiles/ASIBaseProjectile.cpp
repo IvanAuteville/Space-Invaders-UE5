@@ -114,10 +114,15 @@ void AASIBaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	// "Self Destruct" (Pooled: Hide, Disable, etc)
 	HandleDestruction(OtherActor);
 	
-	if (!OnProjectileHit.IsBound())
-		return;
+	if (OnProjectileHit.IsBound())
+	{
+		OnProjectileHit.Broadcast();
+	}
 
-	OnProjectileHit.Broadcast();
+	if (OnProjectileReady.IsBound())
+	{
+		OnProjectileReady.Broadcast(this);
+	}
 }
 
 void AASIBaseProjectile::HandleDestruction(AActor* DestroyerActor)

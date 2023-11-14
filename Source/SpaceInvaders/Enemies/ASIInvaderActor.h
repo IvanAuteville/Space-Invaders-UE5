@@ -27,6 +27,8 @@ public:
 	/** Start IDestructible Interface **/
 	void HandleDestruction(AActor* DestroyerActor) override final;
 	/** End IDestructible Interface **/
+	
+	const USceneComponent* GetProjectileSpawnPoint() const { return ProjectileSpawnPoint; }
 
 protected:
 	void BeginPlay() override final;

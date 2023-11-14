@@ -12,8 +12,10 @@ class UParticleSystem;
 class UParticleSystemComponent;
 class USoundBase;
 class UCameraShakeBase;
+class AASIBaseProjectile;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnProjectileHit);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProjectileReady, AASIBaseProjectile*, Projectile);
 
 // TODO: TYPO double A
 UCLASS()
@@ -33,6 +35,9 @@ public:
 	// Delegates
 	UPROPERTY(BlueprintAssignable)
 	FOnProjectileHit OnProjectileHit;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnProjectileReady OnProjectileReady;
 
 protected:
 	virtual void BeginPlay() override;

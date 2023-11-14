@@ -86,8 +86,18 @@ protected:
 	void EndPlay(const EEndPlayReason::Type EndPlayReason) override final;
 
 private:
-	void RunRevealSequence();
+	void SpawnProjectiles();
+	float CalculateRandomFireTime() const;
+	void TryToFire();
+	void RunFireTimer();
+	AASIInvaderActor* FindInvaderToFire();
+	bool InvaderHasFreePathToFire(const FInvaderFormationSlot& FormationSlot);
+	int32 CalcUnitIndex(const int32 Row, const int32 Col) const;
 
+	UFUNCTION()
+	void OnProjectileReady(AASIBaseProjectile* Projectile);
+
+	void RunRevealSequence();
 	UFUNCTION()
 	void InvaderSpawnSequence();
 
@@ -126,6 +136,9 @@ private:
 
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	double SlowMultiplier = 0.5;
+
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	int32 NumberOfProjectiles = 4;
 	
 	/* All available Invaders in the Formation */
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
@@ -159,8 +172,22 @@ private:
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	const AActor* LastBoundActorCollidedWith = nullptr;
 
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TArray<TObjectPtr<AASIBaseProjectile>> ProjectilesReady;
+
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TArray<TObjectPtr<AASIBaseProjectile>> ProjectilesInUse;
+
 	/* Handle to manage the Sequence timer */
 	FTimerHandle InvadersSpawnSequenceTimerHandle;
 	int32 InvaderSequenceIndex = -1;
 
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float MinShootTime = 1.0f;
+
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float MaxShootTime = 5.0f;
+
+	/* Handle to manage Firing */
+	FTimerHandle FireTimerHandle;
 };

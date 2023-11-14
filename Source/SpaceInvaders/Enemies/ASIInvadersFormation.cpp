@@ -4,10 +4,12 @@
 #include "ASIInvadersFormation.h"
 #include "Engine/TimerHandle.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/SceneComponent.h"
 
 #include "SpaceInvaders/Enemies/SIFormationDataAsset.h"
 #include "SpaceInvaders/Enemies/ASIInvaderActor.h"
 #include "SpaceInvaders/GameModes/ASIGameModeBase.h"
+#include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
 
 //#define UE_LOG_ENABLED
 
@@ -30,8 +32,10 @@ void AASIInvadersFormation::BeginPlay()
 	UpdateCurrentRow();
 	UpdateDestinationRow();
 
-	// TEST: Delay - GameMode Call, etc.
 	SpawnInvaders();
+	
+	// NOTE: due to time constraints, I rushed it too much and couldn't fix a bug with the Projectiles
+	//SpawnProjectiles();
 }
 
 void AASIInvadersFormation::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -90,7 +94,7 @@ void AASIInvadersFormation::SpawnInvaders()
 	RunRevealSequence();
 }
 
-// TODO: for the Reverse Powerup we will need some more checks
+// TODO: for the Reverse PowerUp we will need some more checks
 void AASIInvadersFormation::LateralBoundReached(const AActor* BoundActorCollidedWith)
 {
 	if(LastBoundActorCollidedWith == BoundActorCollidedWith)
@@ -130,6 +134,7 @@ void AASIInvadersFormation::InvaderSpawnSequence()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(InvadersSpawnSequenceTimerHandle);
 		InvadersFormationState = EInvadersFormationState::Moving;
+		RunFireTimer();
 	}
 	else
 	{
@@ -168,7 +173,6 @@ void AASIInvadersFormation::Move(const float DeltaTime)
 
 	const FVector LocalOffset(HorizontalSpeed * CalculatedMovementSpeed, VerticalSpeed * CalculatedMovementSpeed, 0.0);
 	
-
 	for (auto It = Invaders.CreateIterator(); It; ++It)
 	{
 		// An Invader was killed during iteration!
@@ -271,4 +275,121 @@ void AASIInvadersFormation::UpdateFormationGridOnInvaderDestroyed(AASIInvaderAct
 	{
 		checkNoEntry();
 	}
+}
+
+void AASIInvadersFormation::SpawnProjectiles()
+{
+	for (int32 i = 0; i < NumberOfProjectiles; ++i)
+	{
+		AASIBaseProjectile* Projectile = GetWorld()->SpawnActor<AASIBaseProjectile>(
+			ProjectileClass,
+			GetActorLocation(),
+			GetActorRotation());
+
+		Projectile->SetOwner(this);
+		Projectile->OnProjectileReady.AddDynamic(this, &ThisClass::OnProjectileReady);
+
+		ProjectilesReady.Add(Projectile);
+	}
+}
+
+void AASIInvadersFormation::OnProjectileReady(AASIBaseProjectile* Projectile)
+{
+	ProjectilesInUse.Remove(Projectile);
+	ProjectilesReady.Add(Projectile);
+}
+
+float AASIInvadersFormation::CalculateRandomFireTime() const
+{
+	return FMath::FRandRange(MinShootTime, MaxShootTime);
+}
+
+void AASIInvadersFormation::RunFireTimer()
+{
+	const float FireDelay = CalculateRandomFireTime();
+	GetWorld()->GetTimerManager().SetTimer(
+		FireTimerHandle,					// handle to cancel timer at a later time
+		this,								// the owning object
+		&ThisClass::TryToFire,				// function to call on elapsed
+		FireDelay,							// float delay until elapsed
+		false);								// looping?
+}
+
+void AASIInvadersFormation::TryToFire()
+{
+	UE_LOG(LogTemp, Warning, TEXT("TryToFire!"));
+
+	if (!ProjectilesReady.IsEmpty())
+	{
+		AASIInvaderActor* InvaderAttacker = FindInvaderToFire();
+		if (InvaderAttacker)
+		{
+			AASIBaseProjectile* Projectile = ProjectilesReady.Last();
+			ProjectilesReady.RemoveAt(ProjectilesReady.Num() - 1);
+			ProjectilesInUse.Add(Projectile);
+
+			const USceneComponent* ProjectileSpawnPoint = InvaderAttacker->GetProjectileSpawnPoint();
+
+			Projectile->SetActorLocationAndRotation(ProjectileSpawnPoint->GetComponentLocation(),
+				ProjectileSpawnPoint->GetComponentRotation(), false, nullptr, ETeleportType::TeleportPhysics);
+
+			Projectile->Fire();
+
+			UE_LOG(LogTemp, Warning, TEXT("Fire!"));
+		}
+	}
+
+	RunFireTimer();
+}
+
+AASIInvaderActor* AASIInvadersFormation::FindInvaderToFire()
+{
+	UE_LOG(LogTemp, Warning, TEXT("FindInvaderToFire"));
+
+	AASIInvaderActor* Shooter = nullptr;
+
+	while (!Shooter)
+	{
+		const int32 RandomInvaderIndex = FMath::RandRange(0, FormationGrid.Num() - 1);
+		const FInvaderFormationSlot& FormationSlot = FormationGrid[RandomInvaderIndex];
+		
+		AASIInvaderActor* SlotInvader = FormationSlot.Invader;
+		if (!IsValid(SlotInvader))
+			continue;
+
+		if(!InvaderHasFreePathToFire(FormationSlot))
+			continue;
+
+		Shooter = SlotInvader;
+	}
+
+	return Shooter;
+}
+
+int32 AASIInvadersFormation::CalcUnitIndex(const int32 Row, const int32 Col) const
+{
+	return (Row * FormationData->AmountOfInvadersPerRow) + Col;
+}
+
+bool AASIInvadersFormation::InvaderHasFreePathToFire(const FInvaderFormationSlot& FormationSlot)
+{
+	const int32 InvaderCol = FormationSlot.Column;
+	const int32 InvaderRow = FormationSlot.Row;
+
+	const int32 NextUnitIndex = CalcUnitIndex(InvaderRow + 1, InvaderCol);
+	
+	// Last Row
+	if (NextUnitIndex > FormationGrid.Num())
+	{
+		return true;
+	}
+
+	// Below me there's empty space!
+	const FInvaderFormationSlot& NewFormationSlot = FormationGrid[NextUnitIndex];
+	if (!IsValid(NewFormationSlot.Invader))
+	{
+		return true;
+	}
+
+	return false;
 }
