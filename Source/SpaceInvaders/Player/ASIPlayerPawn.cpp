@@ -198,7 +198,8 @@ void AASIPlayerPawn::HandleDestruction(AActor* DestroyerActor)
 	{
 		OnPlayerPawnKilled.Broadcast();
 	}
-	
+
+	Projectile->Destroy(false, true);
 	Destroy(false, true);
 }
 

@@ -12,6 +12,7 @@
 #include "SpaceInvaders/Projectiles/ASIBaseProjectile.h"
 
 //#define UE_LOG_ENABLED
+//#define DEBUG_FORMATION_ENABLED
 
 AASIInvadersFormation::AASIInvadersFormation()
 {
@@ -33,9 +34,7 @@ void AASIInvadersFormation::BeginPlay()
 	UpdateDestinationRow();
 
 	SpawnInvaders();
-	
-	// NOTE: due to time constraints, I rushed it too much and couldn't fix a bug with the Projectiles
-	//SpawnProjectiles();
+	SpawnProjectiles();
 }
 
 void AASIInvadersFormation::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -48,6 +47,19 @@ void AASIInvadersFormation::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AASIInvadersFormation::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+#ifdef DEBUG_FORMATION_ENABLED
+	for (int32 i = 0; i < FormationGrid.Num(); ++i)
+	{
+		const FInvaderFormationSlot& InvaderFormationSlot = FormationGrid[i];
+
+		const FString DebugText = FString::FormatAsNumber(InvaderFormationSlot.Row) + FString(",") +
+			FString::FormatAsNumber(InvaderFormationSlot.Column) + FString("[") + FString::FormatAsNumber(i) + FString("]");
+
+		DrawDebugString(GetWorld(), InvaderFormationSlot.Invader->GetActorLocation(), DebugText,
+			nullptr, FColor::White, 0.0f, false, 1.0f);
+	}
+#endif // DEBUG_FORMATION_ENABLED
 
 	if (!ShouldMove())
 		return;
@@ -257,15 +269,7 @@ void AASIInvadersFormation::InvaderDestroyed(AASIInvaderActor* Invader)
 
 void AASIInvadersFormation::UpdateFormationGridOnInvaderDestroyed(AASIInvaderActor* Invader)
 {
-	auto FindInvaderFormationSlotByInvaderActor = [](const FInvaderFormationSlot& FormationSlot, const AASIInvaderActor* Invader)
-	{
-		return FormationSlot.Invader == Invader;
-	};
-
-	FInvaderFormationSlot* FoundSlot = FormationGrid.FindByPredicate([&](const FInvaderFormationSlot& Element)
-	{
-		return FindInvaderFormationSlotByInvaderActor(Element, Invader);
-	});
+	FInvaderFormationSlot* FoundSlot = FindInvaderFormationSlot(Invader);
 
 	if (FoundSlot)
 	{
@@ -317,13 +321,17 @@ void AASIInvadersFormation::RunFireTimer()
 
 void AASIInvadersFormation::TryToFire()
 {
-	UE_LOG(LogTemp, Warning, TEXT("TryToFire!"));
-
 	if (!ProjectilesReady.IsEmpty())
 	{
 		AASIInvaderActor* InvaderAttacker = FindInvaderToFire();
-		if (InvaderAttacker)
+		if (IsValid(InvaderAttacker))
 		{
+			FInvaderFormationSlot* FoundSlot = FindInvaderFormationSlot(InvaderAttacker);
+
+#ifdef UE_LOG_ENABLED
+			UE_LOG(LogTemp, Warning, TEXT("Invader: [R = %d, C = %d] will Fire!"), FoundSlot->Row, FoundSlot->Column);
+#endif // UE_LOG_ENABLED
+
 			AASIBaseProjectile* Projectile = ProjectilesReady.Last();
 			ProjectilesReady.RemoveAt(ProjectilesReady.Num() - 1);
 			ProjectilesInUse.Add(Projectile);
@@ -334,36 +342,70 @@ void AASIInvadersFormation::TryToFire()
 				ProjectileSpawnPoint->GetComponentRotation(), false, nullptr, ETeleportType::TeleportPhysics);
 
 			Projectile->Fire();
-
-			UE_LOG(LogTemp, Warning, TEXT("Fire!"));
 		}
 	}
 
-	RunFireTimer();
+	if (!Invaders.IsEmpty())
+	{
+		RunFireTimer();
+	}
 }
 
 AASIInvaderActor* AASIInvadersFormation::FindInvaderToFire()
 {
-	UE_LOG(LogTemp, Warning, TEXT("FindInvaderToFire"));
+	if (Invaders.IsEmpty())
+		return nullptr;
 
 	AASIInvaderActor* Shooter = nullptr;
-
-	while (!Shooter)
+	while (!IsValid(Shooter) && !Invaders.IsEmpty())
 	{
-		const int32 RandomInvaderIndex = FMath::RandRange(0, FormationGrid.Num() - 1);
-		const FInvaderFormationSlot& FormationSlot = FormationGrid[RandomInvaderIndex];
+		const int32 RandomInvaderIndex = FMath::RandRange(0, Invaders.Num() - 1);
+		AASIInvaderActor* RandomInvader = Invaders[RandomInvaderIndex];
 		
-		AASIInvaderActor* SlotInvader = FormationSlot.Invader;
-		if (!IsValid(SlotInvader))
+		FInvaderFormationSlot* FoundSlot = FindInvaderFormationSlot(RandomInvader);
+
+#ifdef UE_LOG_ENABLED
+		UE_LOG(LogTemp, Warning, TEXT("RandomInvaderToCheck: [R = %d, C = %d]"), FoundSlot->Row, FoundSlot->Column);
+#endif // UE_LOG_ENABLED
+
+		if (!InvaderHasFreePathToFire(*FoundSlot))
 			continue;
 
-		if(!InvaderHasFreePathToFire(FormationSlot))
-			continue;
-
-		Shooter = SlotInvader;
+		Shooter = RandomInvader;
 	}
 
 	return Shooter;
+}
+
+bool AASIInvadersFormation::InvaderHasFreePathToFire(const FInvaderFormationSlot& FormationSlot)
+{
+	const int32 InvaderRow = FormationSlot.Row;
+	const int32 InvaderCol = FormationSlot.Column;
+	const int32 NextUnitIndex = CalcUnitIndex(InvaderRow + 1, InvaderCol);
+
+#ifdef UE_LOG_ENABLED
+	UE_LOG(LogTemp, Warning, TEXT("RandomInvaderToCheck -> Next Unit Index: [%d]"), NextUnitIndex);
+#endif // UE_LOG_ENABLED
+
+	// We are on the Last Row
+	if (NextUnitIndex >= FormationGrid.Num())
+	{
+		return true;
+	}
+
+	// Below me there's empty space!
+	const FInvaderFormationSlot& NewFormationSlot = FormationGrid[NextUnitIndex];
+
+#ifdef UE_LOG_ENABLED
+	UE_LOG(LogTemp, Warning, TEXT("InvaderBelowToCheck: [R = %d, C = %d]"), NewFormationSlot.Row, NewFormationSlot.Column);
+#endif // UE_LOG_ENABLED
+
+	if (!IsValid(NewFormationSlot.Invader))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 int32 AASIInvadersFormation::CalcUnitIndex(const int32 Row, const int32 Col) const
@@ -371,25 +413,30 @@ int32 AASIInvadersFormation::CalcUnitIndex(const int32 Row, const int32 Col) con
 	return (Row * FormationData->AmountOfInvadersPerRow) + Col;
 }
 
-bool AASIInvadersFormation::InvaderHasFreePathToFire(const FInvaderFormationSlot& FormationSlot)
+FInvaderFormationSlot* AASIInvadersFormation::FindInvaderFormationSlot(AASIInvaderActor* Invader)
 {
-	const int32 InvaderCol = FormationSlot.Column;
-	const int32 InvaderRow = FormationSlot.Row;
-
-	const int32 NextUnitIndex = CalcUnitIndex(InvaderRow + 1, InvaderCol);
-	
-	// Last Row
-	if (NextUnitIndex > FormationGrid.Num())
+	static auto FindInvaderFormationSlotByInvaderActor = [](const FInvaderFormationSlot& FormationSlot, const AASIInvaderActor* Invader)
 	{
-		return true;
+		return FormationSlot.Invader == Invader;
+	};
+
+	FInvaderFormationSlot* FoundSlot = FormationGrid.FindByPredicate([&](const FInvaderFormationSlot& Element)
+	{
+		return FindInvaderFormationSlotByInvaderActor(Element, Invader);
+	});
+
+	return FoundSlot;
+}
+
+void AASIInvadersFormation::OnPlayerPawnDestroyed()
+{
+	for (auto& Projectile : ProjectilesInUse)
+	{
+		if (ProjectilesReady.Contains(Projectile))
+			continue;
+		
+		ProjectilesReady.Add(Projectile);
 	}
 
-	// Below me there's empty space!
-	const FInvaderFormationSlot& NewFormationSlot = FormationGrid[NextUnitIndex];
-	if (!IsValid(NewFormationSlot.Invader))
-	{
-		return true;
-	}
-
-	return false;
+	ProjectilesInUse.Reset();
 }

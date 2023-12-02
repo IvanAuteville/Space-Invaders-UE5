@@ -65,8 +65,6 @@ private:
 	void Fire();
 	void ActivatePowerUp();
 
-	void HandleDestruction();
-
 private:
 	// Components
 	UPROPERTY(Category = "Component", VisibleAnywhere, meta = (AllowPrivateAccess = true))

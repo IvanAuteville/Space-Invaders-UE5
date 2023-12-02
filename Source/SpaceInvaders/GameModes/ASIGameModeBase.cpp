@@ -100,6 +100,7 @@ void AASIGameModeBase::SpawnPawn()
 
 	MyPawn = World->SpawnActor<AASIPlayerPawn>(PlayerPawnClass, SpawnLocation, SpawnRotation, SpawnParams);
 	MyPawn->OnPlayerPawnKilled.AddDynamic(this, &ThisClass::OnPlayerPawnDestroyed);
+	MyPawn->OnPlayerPawnKilled.AddDynamic(InvadersFormation, &AASIInvadersFormation::OnPlayerPawnDestroyed);
 
 	MyPlayerController->Possess(MyPawn);
 }

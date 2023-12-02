@@ -73,6 +73,9 @@ public:
 
 	void InvaderDestroyed(AASIInvaderActor* Invader);
 
+	UFUNCTION()
+	void OnPlayerPawnDestroyed();
+
 public:
 	// Delegates
 	UPROPERTY()
@@ -90,7 +93,10 @@ private:
 	float CalculateRandomFireTime() const;
 	void TryToFire();
 	void RunFireTimer();
+
 	AASIInvaderActor* FindInvaderToFire();
+	FInvaderFormationSlot* FindInvaderFormationSlot(AASIInvaderActor* Invader);
+
 	bool InvaderHasFreePathToFire(const FInvaderFormationSlot& FormationSlot);
 	int32 CalcUnitIndex(const int32 Row, const int32 Col) const;
 
