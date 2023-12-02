@@ -102,6 +102,8 @@ void AASIInvadersFormation::SpawnInvaders()
 		}
 	}
 
+	OriginalInvadersCount = Invaders.Num();
+
 	// Test Delay and "Spawn" individually, like in the original Space Invaders
 	RunRevealSequence();
 }
@@ -170,9 +172,10 @@ bool AASIInvadersFormation::ShouldMove() const
 // TODO POLISH: move one by one with a bit of delay, like the original
 void AASIInvadersFormation::Move(const float DeltaTime)
 {
-	// TODO: take into account EFormationThreatLevel::FormationThreatLevel
+	static const double ThreatLevelSpeedMult = 1.0; // TODO: expose
+	double ThreatLevelSpeedModifiers = static_cast<uint8>(FormationThreatLevel) * ThreatLevelSpeedMult;
 	double SpeedModifiers = (InvadersFormationState == EInvadersFormationState::Slowed) ? SlowMultiplier : 1.0;
-	double CalculatedMovementSpeed = BaseMovementSpeed * SpeedModifiers * DeltaTime;
+	double CalculatedMovementSpeed = BaseMovementSpeed * SpeedModifiers * ThreatLevelSpeedModifiers * DeltaTime;
 
 	const double HorizontalDir = (HorizontalMovementType == EHorizontalMovementType::Right) ? 1.0 : -1.0;
 	const double VerticalDir = (VerticalMovementType == EVerticalMovementType::Up) ? -1.0 : 1.0;
@@ -254,7 +257,9 @@ void AASIInvadersFormation::UpdateDestinationRow()
 void AASIInvadersFormation::InvaderDestroyed(AASIInvaderActor* Invader)
 {
 	Invaders.Remove(Invader);
+
 	UpdateFormationGridOnInvaderDestroyed(Invader);
+	UpdateFormationThreatLevel();
 
 	if (OnInvaderKilled.IsBound())
 	{
@@ -278,6 +283,31 @@ void AASIInvadersFormation::UpdateFormationGridOnInvaderDestroyed(AASIInvaderAct
 	else
 	{
 		checkNoEntry();
+	}
+}
+
+void AASIInvadersFormation::UpdateFormationThreatLevel()
+{
+	const int32 CurrentInvadersCount = Invaders.Num();
+	const double CurrentInvadersPercetage = static_cast<double>(CurrentInvadersCount) /
+		static_cast<double>(OriginalInvadersCount);
+	
+	// TODO: thresholds
+	if (CurrentInvadersPercetage <= 0.15)
+	{
+		FormationThreatLevel = EFormationThreatLevel::VeryHigh;
+	}
+	else if (CurrentInvadersPercetage <= 0.35)
+	{
+		FormationThreatLevel = EFormationThreatLevel::High;
+	}
+	else if (CurrentInvadersPercetage <= 0.70)
+	{
+		FormationThreatLevel = EFormationThreatLevel::Low;
+	}
+	else
+	{
+		FormationThreatLevel = EFormationThreatLevel::VeryLow;
 	}
 }
 
@@ -305,7 +335,11 @@ void AASIInvadersFormation::OnProjectileReady(AASIBaseProjectile* Projectile)
 
 float AASIInvadersFormation::CalculateRandomFireTime() const
 {
-	return FMath::FRandRange(MinShootTime, MaxShootTime);
+	// TODO: can be improved / be exposed -> Enemies should fire more frequently based on FormationThreatLevel
+	const float CalculatedMaxShootTime = FMath::Clamp(MaxShootTime * (1.0 / static_cast<double>(FormationThreatLevel)),
+		MinShootTime, MaxShootTime);
+
+	return FMath::FRandRange(MinShootTime, CalculatedMaxShootTime);
 }
 
 void AASIInvadersFormation::RunFireTimer()

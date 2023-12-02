@@ -118,6 +118,7 @@ private:
 	void UpdateDestinationRow();
 
 	void UpdateFormationGridOnInvaderDestroyed(AASIInvaderActor* Invader);
+	void UpdateFormationThreatLevel();
 
 private:
 	UPROPERTY(Category = "Component", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
@@ -183,6 +184,9 @@ private:
 
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TArray<TObjectPtr<AASIBaseProjectile>> ProjectilesInUse;
+
+	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	int32 OriginalInvadersCount = -1;
 
 	/* Handle to manage the Sequence timer */
 	FTimerHandle InvadersSpawnSequenceTimerHandle;
