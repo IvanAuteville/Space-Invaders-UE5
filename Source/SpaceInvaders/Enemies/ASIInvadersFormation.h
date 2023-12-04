@@ -34,6 +34,17 @@ public:
 	AASIInvaderActor* Invader = nullptr;
 };
 
+USTRUCT(BlueprintType)
+struct FThreatLevelValues
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	double InvadersPercentageToActivate = -1.0;
+	UPROPERTY(EditDefaultsOnly)
+	double InvadersSpeedMultiplier = -1.0;
+};
+
 // TODO: Move to Enums folder
 /* Very simple StateMachine like */
 UENUM(BlueprintType)
@@ -146,7 +157,10 @@ private:
 
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	int32 NumberOfProjectiles = 4;
-	
+
+	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	TMap<EFormationThreatLevel, FThreatLevelValues> ThreatLevelSettings;
+
 	/* All available Invaders in the Formation */
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TArray<AASIInvaderActor*> Invaders;

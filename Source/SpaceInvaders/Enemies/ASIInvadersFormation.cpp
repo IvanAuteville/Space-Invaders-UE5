@@ -172,10 +172,9 @@ bool AASIInvadersFormation::ShouldMove() const
 // TODO POLISH: move one by one with a bit of delay, like the original
 void AASIInvadersFormation::Move(const float DeltaTime)
 {
-	static const double ThreatLevelSpeedMult = 1.0; // TODO: expose
-	double ThreatLevelSpeedModifiers = static_cast<uint8>(FormationThreatLevel) * ThreatLevelSpeedMult;
+	const FThreatLevelValues ThreatLevelValues = ThreatLevelSettings.FindRef(FormationThreatLevel);
 	double SpeedModifiers = (InvadersFormationState == EInvadersFormationState::Slowed) ? SlowMultiplier : 1.0;
-	double CalculatedMovementSpeed = BaseMovementSpeed * SpeedModifiers * ThreatLevelSpeedModifiers * DeltaTime;
+	double CalculatedMovementSpeed = BaseMovementSpeed * SpeedModifiers * ThreatLevelValues.InvadersSpeedMultiplier * DeltaTime;
 
 	const double HorizontalDir = (HorizontalMovementType == EHorizontalMovementType::Right) ? 1.0 : -1.0;
 	const double VerticalDir = (VerticalMovementType == EVerticalMovementType::Up) ? -1.0 : 1.0;
@@ -289,25 +288,24 @@ void AASIInvadersFormation::UpdateFormationGridOnInvaderDestroyed(AASIInvaderAct
 void AASIInvadersFormation::UpdateFormationThreatLevel()
 {
 	const int32 CurrentInvadersCount = Invaders.Num();
-	const double CurrentInvadersPercetage = static_cast<double>(CurrentInvadersCount) /
+	const double CurrentInvadersPercentage = static_cast<double>(CurrentInvadersCount) /
 		static_cast<double>(OriginalInvadersCount);
-	
-	// TODO: thresholds
-	if (CurrentInvadersPercetage <= 0.15)
+
+	double LowestPercentageChecked = std::numeric_limits<double>::max();
+
+	for (const auto& ThreatEntry : ThreatLevelSettings)
 	{
-		FormationThreatLevel = EFormationThreatLevel::VeryHigh;
-	}
-	else if (CurrentInvadersPercetage <= 0.35)
-	{
-		FormationThreatLevel = EFormationThreatLevel::High;
-	}
-	else if (CurrentInvadersPercetage <= 0.70)
-	{
-		FormationThreatLevel = EFormationThreatLevel::Low;
-	}
-	else
-	{
-		FormationThreatLevel = EFormationThreatLevel::VeryLow;
+		const EFormationThreatLevel ThreatLevel = ThreatEntry.Key;
+		const double PercentageToActivate = ThreatEntry.Value.InvadersPercentageToActivate;
+
+		const bool bShouldUpdate = CurrentInvadersPercentage <= PercentageToActivate &&
+			LowestPercentageChecked >= PercentageToActivate;
+
+		if (!bShouldUpdate)
+			continue;
+
+		FormationThreatLevel = ThreatLevel;
+		LowestPercentageChecked = PercentageToActivate;
 	}
 }
 
