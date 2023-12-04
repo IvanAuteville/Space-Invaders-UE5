@@ -353,7 +353,7 @@ void AASIInvadersFormation::RunFireTimer()
 
 void AASIInvadersFormation::TryToFire()
 {
-	if (!ProjectilesReady.IsEmpty())
+	if (!ProjectilesReady.IsEmpty() && bShoot)
 	{
 		AASIInvaderActor* InvaderAttacker = FindInvaderToFire();
 		if (IsValid(InvaderAttacker))

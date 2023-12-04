@@ -161,6 +161,9 @@ private:
 	UPROPERTY(Category = "Settings", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	TMap<EFormationThreatLevel, FThreatLevelValues> ThreatLevelSettings;
 
+	UPROPERTY(Category = "Debug", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	bool bShoot = true;
+
 	/* All available Invaders in the Formation */
 	UPROPERTY(Category = "Instance", VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TArray<AASIInvaderActor*> Invaders;
